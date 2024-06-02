@@ -1,0 +1,19 @@
+{
+	"i18n": true,
+	"type": "panel",
+	"items": {
+		"host": {
+			"type": "text",
+			"label": "IP Adress / Hostname",
+			"newLine": true
+		},
+		"user": {
+			"type": "text",
+			"label": "Username"
+		},
+		"password": {
+			"type": "password",
+			"label": "Password"
+		}
+	}
+}
