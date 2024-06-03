@@ -113,6 +113,13 @@
 			"def": false
 		},
 		"native": {}
+		},
+		{
+			"_id": "cameras",
+			"type": "device",
+			"common": {
+				"name": "Cameras"
+			}
 		}
 	]
 }

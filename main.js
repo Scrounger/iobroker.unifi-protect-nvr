@@ -8,6 +8,8 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 
+const myDevices = require('./lib/devices');
+
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
@@ -27,11 +29,11 @@ class UnifiProtectApi extends utils.Adapter {
 			cameras: {}
 		};
 
-		this.aliveInterval = 30;
+		this.aliveInterval = 15;
 		this.aliveTimeout = null;
 		this.aliveTimestamp = new Date().getTime();
 
-		this.connectionMaxRetries = 100;
+		this.connectionMaxRetries = 200;
 		this.connectionRetries = 0;
 
 		this.on('ready', this.onReady.bind(this));
@@ -54,7 +56,7 @@ class UnifiProtectApi extends utils.Adapter {
 			this.ufp = new UnifiProtectImport(this.log);
 
 			await this.initListener();
-			await this.establishConnection();
+			await this.establishConnection(true);
 
 
 			// // Initialize your adapter here
@@ -188,12 +190,12 @@ class UnifiProtectApi extends utils.Adapter {
 	// 	}
 	// }
 
-	async establishConnection() {
+	async establishConnection(isAdapterStart = false) {
 		const logPrefix = '[establishConnection]:';
 
 		try {
 			if (await this.login()) {
-				await this.getDevices();
+				await this.getDevices(isAdapterStart);
 			}
 
 			// start the alive checker
@@ -241,7 +243,7 @@ class UnifiProtectApi extends utils.Adapter {
 		return false;
 	}
 
-	async getDevices() {
+	async getDevices(isAdapterStart) {
 		const logPrefix = '[getDevices]:';
 
 		try {
@@ -251,8 +253,11 @@ class UnifiProtectApi extends utils.Adapter {
 					for (const cam of this.ufp.bootstrap.cameras) {
 						this.log.info(`${logPrefix}: Discovered ${cam.modelKey}: ${this.ufp.getDeviceName(cam, cam.name)} (IP: ${cam.host}, mac: ${cam.mac}, id: ${cam.id}, state: ${cam.state})`);
 						this.devices.cameras[cam.id] = cam;
-					}
 
+						if (isAdapterStart) {
+							await this.createCameraStates(cam);
+						}
+					}
 					this.log.silly(`${logPrefix} devices.cameras: ${JSON.stringify(this.devices.cameras)}`);
 				}
 			}
@@ -268,6 +273,9 @@ class UnifiProtectApi extends utils.Adapter {
 		try {
 			if (this.ufp) {
 				this.ufp.on('message', async (event) => {
+					// is used to check whether the connection to the controller exists
+					this.aliveTimestamp = new Date().getTime();
+
 					// await tmp.decode('warn', data);
 
 					// this.log.warn(event.header.modelKey);
@@ -276,19 +284,16 @@ class UnifiProtectApi extends utils.Adapter {
 
 					if (event.header.modelKey === 'camera') {
 						// that.log.warn(JSON.stringify(event));
+						// this.log.warn(JSON.stringify(event));
 
-						if (this.devices.cameras[event.header.id]) {
-							// this.log.warn(this.ufp.getDeviceName(this.devices.cameras[event.header.id]));
-						}
-					} else if (event.header.modelKey === 'nvr' && event.header.action === 'update' && event.payload.lastSeen) {
-						// is used to check whether the connection to the controller exists
-						this.aliveTimestamp = new Date().getTime();
+						// if (this.devices.cameras[event.header.id]) {
+						// 	this.log.warn(this.ufp.getDeviceName(this.devices.cameras[event.header.id]));
+						// }
 					}
 				});
 				this.ufp.on('', async (event) => {
 					this.log.error(JSON.stringify(event));
 				});
-
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
@@ -314,7 +319,7 @@ class UnifiProtectApi extends utils.Adapter {
 					if (this.connectionRetries < this.connectionMaxRetries) {
 						this.connectionRetries++;
 
-						this.establishConnection();
+						await this.establishConnection();
 					} else {
 						this.log.error(`${logPrefix} Connection to the Unifi-Protect controller is down for more then ${this.connectionMaxRetries * this.aliveInterval}s, stopping the adapter.`);
 						this.stop();
@@ -335,6 +340,90 @@ class UnifiProtectApi extends utils.Adapter {
 					}, this.aliveInterval * 1000);
 				}
 			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	/** Create camera states
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
+	 */
+	async createCameraStates(cam) {
+		const logPrefix = '[createCameraStates]:';
+
+		try {
+			if (this.ufp) {
+
+				if (!await this.objectExists(`cameras.${cam.id}`)) {
+					// create cam channel
+					this.log.debug(`${logPrefix} creating channel '${cam.id}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
+					await this.createChannelAsync('cameras', cam.id, {
+						name: this.ufp.getDeviceName(cam, cam.name)
+					});
+				}
+
+				await this.createGenericState('cameras', cam.id, myDevices.cameras, cam);
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	/**
+	 * @param {string} parent
+	 * @param {string} channel
+	 * @param {object} objList
+	 * @param {object} objValues
+	 */
+	async createGenericState(parent, channel, objList, objValues) {
+		const logPrefix = '[createGenericState]:';
+
+		try {
+			for (const id in objList) {
+				if (id && Object.prototype.hasOwnProperty.call(objList[id], 'type')) {
+					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
+						this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${id}'`);
+
+						await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+							type: 'state',
+							common: {
+								name: objList[id].name ? objList[id].name : id,
+								type: objList[id].type,
+								read: true,
+								write: objList[id].write ? objList[id].write : false,
+								role: objList[id].role ? objList[id].role : 'state',
+								unit: objList[id].unit ? objList[id].unit : '',
+							},
+							native: {}
+						});
+					}
+
+					if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
+						if (objList[id].convert) {
+							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objList[id].convert(objValues[id]), true);
+						} else {
+							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
+						}
+					} else {
+						this.log.debug(`${logPrefix} property '${channel}.${id}' not exists on values of object`);
+					}
+				} else {
+					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
+						this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
+
+						await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+							type: 'channel',
+							common: {
+								name: id
+							},
+							native: {}
+						});
+
+					}
+					await this.createGenericState(parent, `${channel}.${id}`, objList[id], objValues[id]);
+				}
+			}
+
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
 		}
