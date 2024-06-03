@@ -9,6 +9,7 @@
 const utils = require('@iobroker/adapter-core');
 
 const myDevices = require('./lib/devices');
+const myHelper = require('./lib/helper');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
@@ -24,6 +25,7 @@ class UnifiProtectApi extends utils.Adapter {
 			name: 'unifi-protect-api',
 		});
 
+		this.isConnected = false;
 		this.ufp = undefined;
 		this.devices = {
 			cameras: {}
@@ -130,7 +132,7 @@ class UnifiProtectApi extends utils.Adapter {
 			// clearInterval(interval1);
 			if (this.ufp) {
 				this.ufp.reset();
-				this.setStateAsync('info.connection', false, true);
+				this.setConnectionStatus(false);
 				this.log.info(`${logPrefix} Logged out successfully from the Unifi-Protect controller API. (host: ${this.config.host})`);
 			}
 
@@ -162,13 +164,36 @@ class UnifiProtectApi extends utils.Adapter {
 	 * @param {string} id
 	 * @param {ioBroker.State | null | undefined} state
 	 */
-	onStateChange(id, state) {
-		if (state) {
-			// The state was changed
-			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-		} else {
-			// The state was deleted
-			this.log.info(`state ${id} deleted`);
+	async onStateChange(id, state) {
+		const logPrefix = '[onStateChange]:';
+		try {
+			if (this.isConnected && this.ufp) {
+
+				if (state && !state.from.includes(this.namespace)) {
+					// The state was changed
+					if (id.includes('cameras')) {
+						const camId = id.split('.')[3];
+
+						if (this.devices.cameras[camId]) {
+							const objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
+							this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
+
+							this.log.info(`${logPrefix} cam state '${id}' changed to '${state.val}'`);
+						} else {
+							this.log.error(`${logPrefix} cam (id ${camId}) not exists in devices list`);
+						}
+					} else {
+						this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+					}
+				} else {
+					// The state was deleted
+					this.log.info(`state ${id} deleted`);
+				}
+			} else {
+				this.log.warn(`${logPrefix} No Connection to the Unifi-Controller, '${id}' cannot be written!`);
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
 		}
 	}
 
@@ -225,7 +250,7 @@ class UnifiProtectApi extends utils.Adapter {
 
 					if (await this.ufp.getBootstrap()) {
 						this.log.debug(`${logPrefix} successfully received bootstrap`);
-						await this.setStateAsync('info.connection', true, true);
+						await this.setConnectionStatus(true);
 
 						return true;
 					} else {
@@ -239,7 +264,8 @@ class UnifiProtectApi extends utils.Adapter {
 			this.log.error(`${logPrefix} ${error}`);
 		}
 
-		await this.setStateAsync('info.connection', false, true);
+		await this.setConnectionStatus(false);
+
 		return false;
 	}
 
@@ -314,7 +340,7 @@ class UnifiProtectApi extends utils.Adapter {
 					this.log.warn(`${logPrefix} No connection to the Unifi-Protect controller -> restart connection (retries: ${this.connectionRetries})`);
 					this.ufp.reset();
 
-					await this.setStateAsync('info.connection', false, true);
+					await this.setConnectionStatus(false);
 
 					if (this.connectionRetries < this.connectionMaxRetries) {
 						this.connectionRetries++;
@@ -327,7 +353,7 @@ class UnifiProtectApi extends utils.Adapter {
 				} else {
 					this.log.debug(`${logPrefix} Connection to the Unifi-Protect controller is alive (last alive signal is ${diff}s old)`);
 
-					await this.setStateAsync('info.connection', true, true);
+					await this.setConnectionStatus(true);
 					this.connectionRetries = 0;
 
 					if (this.aliveTimeout) {
@@ -381,10 +407,11 @@ class UnifiProtectApi extends utils.Adapter {
 		try {
 			for (const id in objList) {
 				if (id && Object.prototype.hasOwnProperty.call(objList[id], 'type')) {
+					// if we have a 'type' property, then it's a state
+
 					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
 						this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${id}'`);
-
-						await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+						const obj = {
 							type: 'state',
 							common: {
 								name: objList[id].name ? objList[id].name : id,
@@ -395,12 +422,25 @@ class UnifiProtectApi extends utils.Adapter {
 								unit: objList[id].unit ? objList[id].unit : '',
 							},
 							native: {}
-						});
+						};
+
+						if (objList[id].states) {
+							obj.common.states = objList[id].states;
+						}
+
+						await this.setObjectAsync(`${parent}.${channel}.${id}`, obj);
+					}
+
+					if (objList[id].write && objList[id].write === true) {
+						// state is writeable -> subscribe it
+						this.log.debug(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
+						await this.subscribeStatesAsync(`${parent}.${channel}.${id}`);
 					}
 
 					if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
-						if (objList[id].convert) {
-							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objList[id].convert(objValues[id]), true);
+						// write current val to state
+						if (objList[id].convertVal) {
+							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objList[id].convertVal(objValues[id]), true);
 						} else {
 							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
 						}
@@ -408,6 +448,7 @@ class UnifiProtectApi extends utils.Adapter {
 						this.log.debug(`${logPrefix} property '${channel}.${id}' not exists on values of object`);
 					}
 				} else {
+					// it's a channel, create it and iterate again over the properties
 					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
 						this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
 
@@ -428,6 +469,18 @@ class UnifiProtectApi extends utils.Adapter {
 			this.log.error(`${logPrefix} ${error}`);
 		}
 	}
+
+	async setConnectionStatus(isConnected) {
+		const logPrefix = '[setConnectionStatus]:';
+
+		try {
+			this.isConnected = isConnected;
+			await this.setStateAsync('info.connection', isConnected, true);
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
 }
 
 if (require.main !== module) {
