@@ -8,7 +8,7 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 
-const myDevices = require('./lib/devices');
+const myDeviceTypes = require('./lib/devices');
 const myHelper = require('./lib/helper');
 
 // Load your modules here, e.g.:
@@ -59,7 +59,6 @@ class UnifiProtectApi extends utils.Adapter {
 
 			await this.initListener();
 			await this.establishConnection(true);
-
 
 			// // Initialize your adapter here
 
@@ -187,7 +186,7 @@ class UnifiProtectApi extends utils.Adapter {
 					}
 				} else {
 					// The state was deleted
-					this.log.info(`state ${id} deleted`);
+					// this.log.info(`state ${id} deleted`);
 				}
 			} else {
 				this.log.warn(`${logPrefix} No Connection to the Unifi-Controller, '${id}' cannot be written!`);
@@ -274,6 +273,9 @@ class UnifiProtectApi extends utils.Adapter {
 
 		try {
 			if (this.ufp && this.ufp.bootstrap) {
+				// this.log.warn(JSON.stringify(this.ufp.bootstrap));
+
+
 				// Add Cameras to List
 				if (this.ufp.bootstrap.cameras) {
 					for (const cam of this.ufp.bootstrap.cameras) {
@@ -293,6 +295,10 @@ class UnifiProtectApi extends utils.Adapter {
 		}
 	}
 
+	/**
+	 * Initialize ufp listener to get event data
+	 * must be done before opening the connection
+	 */
 	async initListener() {
 		const logPrefix = '[initListener]:';
 
@@ -302,19 +308,10 @@ class UnifiProtectApi extends utils.Adapter {
 					// is used to check whether the connection to the controller exists
 					this.aliveTimestamp = new Date().getTime();
 
-					// await tmp.decode('warn', data);
-
-					// this.log.warn(event.header.modelKey);
-
-					// this.log.warn(JSON.stringify(event.header));
-
 					if (event.header.modelKey === 'camera') {
-						// that.log.warn(JSON.stringify(event));
-						// this.log.warn(JSON.stringify(event));
+						const camId = event.header.id;
 
-						// if (this.devices.cameras[event.header.id]) {
-						// 	this.log.warn(this.ufp.getDeviceName(this.devices.cameras[event.header.id]));
-						// }
+						await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
 					}
 				});
 				this.ufp.on('', async (event) => {
@@ -327,7 +324,7 @@ class UnifiProtectApi extends utils.Adapter {
 	}
 
 	/**
-	 * Check whether the connection to the controller exists, if not establish a new connection
+	 * Check whether the connection to the controller exists, if not try to establish a new connection
 	 */
 	async aliveChecker() {
 		const logPrefix = '[aliveChecker]:';
@@ -388,25 +385,26 @@ class UnifiProtectApi extends utils.Adapter {
 					});
 				}
 
-				await this.createGenericState('cameras', cam.id, myDevices.cameras, cam);
+				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
 		}
 	}
 
-	/**
-	 * @param {string} parent
-	 * @param {string} channel
-	 * @param {object} objList
-	 * @param {object} objValues
+	/** Create all states for a devices, that are defined in {@link myDeviceTypes}
+	 * @param {string} parent id of device (e.g. cameras)
+	 * @param {string} channel id of channel (e.g. camera id)
+	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
+	 * @param {object} objValues ufp bootstrap values of device
 	 */
-	async createGenericState(parent, channel, objList, objValues) {
+	async createGenericState(parent, channel, deviceTypes, objValues) {
 		const logPrefix = '[createGenericState]:';
 
 		try {
-			for (const id in objList) {
-				if (id && Object.prototype.hasOwnProperty.call(objList[id], 'type')) {
+			// {@link myDevices}
+			for (const id in deviceTypes) {
+				if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type')) {
 					// if we have a 'type' property, then it's a state
 
 					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
@@ -414,24 +412,24 @@ class UnifiProtectApi extends utils.Adapter {
 						const obj = {
 							type: 'state',
 							common: {
-								name: objList[id].name ? objList[id].name : id,
-								type: objList[id].type,
+								name: deviceTypes[id].name ? deviceTypes[id].name : id,
+								type: deviceTypes[id].type,
 								read: true,
-								write: objList[id].write ? objList[id].write : false,
-								role: objList[id].role ? objList[id].role : 'state',
-								unit: objList[id].unit ? objList[id].unit : '',
+								write: deviceTypes[id].write ? deviceTypes[id].write : false,
+								role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
+								unit: deviceTypes[id].unit ? deviceTypes[id].unit : '',
 							},
 							native: {}
 						};
 
-						if (objList[id].states) {
-							obj.common.states = objList[id].states;
+						if (deviceTypes[id].states) {
+							obj.common.states = deviceTypes[id].states;
 						}
 
 						await this.setObjectAsync(`${parent}.${channel}.${id}`, obj);
 					}
 
-					if (objList[id].write && objList[id].write === true) {
+					if (deviceTypes[id].write && deviceTypes[id].write === true) {
 						// state is writeable -> subscribe it
 						this.log.debug(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
 						await this.subscribeStatesAsync(`${parent}.${channel}.${id}`);
@@ -439,8 +437,8 @@ class UnifiProtectApi extends utils.Adapter {
 
 					if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
 						// write current val to state
-						if (objList[id].convertVal) {
-							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objList[id].convertVal(objValues[id]), true);
+						if (deviceTypes[id].convertVal) {
+							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, deviceTypes[id].convertVal(objValues[id]), true);
 						} else {
 							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
 						}
@@ -461,7 +459,7 @@ class UnifiProtectApi extends utils.Adapter {
 						});
 
 					}
-					await this.createGenericState(parent, `${channel}.${id}`, objList[id], objValues[id]);
+					await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id]);
 				}
 			}
 
@@ -470,6 +468,47 @@ class UnifiProtectApi extends utils.Adapter {
 		}
 	}
 
+
+	/** Update device values from event payload
+	 * @param {any} idDevice id of device (e.g. camera id)
+	 * @param {string} idParentDevice id of parent device (e.g. cameras)
+	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
+	 * @param {object} payload data from event
+	 */
+	async updateStates(idDevice, idParentDevice, deviceTypes, payload, idPrefix = '') {
+		const logPrefix = '[updateStates]:';
+
+		try {
+			for (const key in payload) {
+				if (deviceTypes[key]) {
+					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
+						const id = `${idParentDevice}.${idDevice}${idPrefix}.${key}`;
+						const val = deviceTypes[key].convertVal ? deviceTypes[key].convertVal(payload[key]) : payload[key];
+
+						if (this.log.level === 'debug') {
+							// ToDo: change to silly level
+							const oldState = await this.getStateAsync(id);
+
+							if (oldState && oldState.val !== val) {
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(this.devices.cameras[idDevice])} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
+							}
+						}
+
+						if (await this.objectExists(id)) // check, as id may be on blacklist
+							await this.setStateChangedAsync(id, val, true);
+					} else {
+						await this.updateStates(idDevice, idParentDevice, deviceTypes[key], payload[key], `${idPrefix}.${key}`);
+					}
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	/** Set adapter info.connection state and internal var
+	 * @param {boolean} isConnected
+	 */
 	async setConnectionStatus(isConnected) {
 		const logPrefix = '[setConnectionStatus]:';
 
@@ -481,6 +520,15 @@ class UnifiProtectApi extends utils.Adapter {
 		}
 	}
 
+	async getCamerNameById(camId) {
+		const logPrefix = '[setConnectionStatus]:';
+
+		try {
+			this.log.warn(JSON.stringify(this.devices.cameras));
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
 }
 
 if (require.main !== module) {
