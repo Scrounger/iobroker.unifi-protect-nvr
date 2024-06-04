@@ -1,15 +1,15 @@
 {
 	"cli": true,
 	"target": "directory",
-	"adapterName": "unifi-protect-api",
-	"title": "Unifi Protect Api",
+	"adapterName": "unifi-protect-nvr",
+	"title": "Unifi Protect NVR",
 	"description": "todo",
 	"keywords": [
 		"unifi",
 		"protect",
+		"nvr",
 		"api",
-		"camera",
-		"nvr"
+		"camera"
 	],
 	"expert": "no",
 	"features": [

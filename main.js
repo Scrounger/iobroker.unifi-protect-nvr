@@ -14,7 +14,7 @@ const myHelper = require('./lib/helper');
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
-class UnifiProtectApi extends utils.Adapter {
+class UnifiProtectNvr extends utils.Adapter {
 
 	/**
 	 * @param {Partial<utils.AdapterOptions>} [options={}]
@@ -22,7 +22,7 @@ class UnifiProtectApi extends utils.Adapter {
 	constructor(options) {
 		super({
 			...options,
-			name: 'unifi-protect-api',
+			name: 'unifi-protect-nvr',
 		});
 
 		this.isConnected = false;
@@ -52,13 +52,18 @@ class UnifiProtectApi extends utils.Adapter {
 		const logPrefix = '[onReady]:';
 
 		try {
-			this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
+			if (this.config.host, this.config.user, this.config.password) {
+				this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
 
-			const UnifiProtectImport = (await import('unifi-protect')).ProtectApi;
-			this.ufp = new UnifiProtectImport(this.log);
+				const UnifiProtectImport = (await import('unifi-protect')).ProtectApi;
+				this.ufp = new UnifiProtectImport(this.log);
 
-			await this.initListener();
-			await this.establishConnection(true);
+				await this.initListener();
+				await this.establishConnection(true);
+			} else {
+				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
+			}
+
 
 			// // Initialize your adapter here
 
@@ -540,8 +545,8 @@ if (require.main !== module) {
 	/**
 	 * @param {Partial<utils.AdapterOptions>} [options={}]
 	 */
-	module.exports = (options) => new UnifiProtectApi(options);
+	module.exports = (options) => new UnifiProtectNvr(options);
 } else {
 	// otherwise start the instance directly
-	new UnifiProtectApi();
+	new UnifiProtectNvr();
 }

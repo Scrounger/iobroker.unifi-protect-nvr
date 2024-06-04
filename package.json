@@ -1,23 +1,23 @@
 {
-  "name": "iobroker.unifi-protect-api",
+  "name": "iobroker.unifi-protect-nvr",
   "version": "0.0.1",
   "description": "todo",
   "author": {
     "name": "Scrounger",
     "email": "scrounger@gmx.net"
   },
-  "homepage": "https://github.com/Scrounger/ioBroker.unifi-protect-api",
+  "homepage": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr",
   "license": "MIT",
   "keywords": [
     "unifi",
     "protect",
+    "nvr",
     "api",
-    "camera",
-    "nvr"
+    "camera"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Scrounger/ioBroker.unifi-protect-api.git"
+    "url": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr.git"
   },
   "engines": {
     "node": ">= 18"
@@ -71,7 +71,7 @@
     "release": "release-script"
   },
   "bugs": {
-    "url": "https://github.com/Scrounger/ioBroker.unifi-protect-api/issues"
+    "url": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr/issues"
   },
   "readmeFilename": "README.md"
 }

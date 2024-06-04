@@ -1,16 +1,16 @@
-![Logo](admin/unifi-protect-api.png)
-# ioBroker.unifi-protect-api
+![Logo](admin/unifi-protect-nvr.png)
+# ioBroker.unifi-protect-nvr
 
-[![NPM version](https://img.shields.io/npm/v/iobroker.unifi-protect-api.svg)](https://www.npmjs.com/package/iobroker.unifi-protect-api)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.unifi-protect-api.svg)](https://www.npmjs.com/package/iobroker.unifi-protect-api)
-![Number of Installations](https://iobroker.live/badges/unifi-protect-api-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/unifi-protect-api-stable.svg)
+[![NPM version](https://img.shields.io/npm/v/iobroker.unifi-protect-nvr.svg)](https://www.npmjs.com/package/iobroker.unifi-protect-nvr)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.unifi-protect-nvr.svg)](https://www.npmjs.com/package/iobroker.unifi-protect-nvr)
+![Number of Installations](https://iobroker.live/badges/unifi-protect-nvr-installed.svg)
+![Current version in stable repository](https://iobroker.live/badges/unifi-protect-nvr-stable.svg)
 
-[![NPM](https://nodei.co/npm/iobroker.unifi-protect-api.png?downloads=true)](https://nodei.co/npm/iobroker.unifi-protect-api/)
+[![NPM](https://nodei.co/npm/iobroker.unifi-protect-nvr.png?downloads=true)](https://nodei.co/npm/iobroker.unifi-protect-nvr/)
 
-**Tests:** ![Test and Release](https://github.com/Scrounger/ioBroker.unifi-protect-api/workflows/Test%20and%20Release/badge.svg)
+**Tests:** ![Test and Release](https://github.com/Scrounger/ioBroker.unifi-protect-nvr/workflows/Test%20and%20Release/badge.svg)
 
-## unifi-protect-api adapter for ioBroker
+## unifi-protect-nvr adapter for ioBroker
 
 todo
 
@@ -25,7 +25,7 @@ You can check other adapters for examples or ask in the developer community. Usi
 ### Getting started
 
 You are almost done, only a few steps left:
-1. Create a new repository on GitHub with the name `ioBroker.unifi-protect-api`
+1. Create a new repository on GitHub with the name `ioBroker.unifi-protect-nvr`
 1. Initialize the current folder as a new git repository:  
 	```bash
 	git init -b main
@@ -34,14 +34,14 @@ You are almost done, only a few steps left:
 	```
 1. Link your local repository with the one on GitHub:  
 	```bash
-	git remote add origin https://github.com/Scrounger/ioBroker.unifi-protect-api
+	git remote add origin https://github.com/Scrounger/ioBroker.unifi-protect-nvr
 	```
 
 1. Push all files to the GitHub repo:  
 	```bash
 	git push origin main
 	```
-1. Add a new secret under https://github.com/Scrounger/ioBroker.unifi-protect-api/settings/secrets. It must be named `AUTO_MERGE_TOKEN` and contain a personal access token with push access to the repository, e.g. yours. You can create a new token under https://github.com/settings/tokens.
+1. Add a new secret under https://github.com/Scrounger/ioBroker.unifi-protect-nvr/settings/secrets. It must be named `AUTO_MERGE_TOKEN` and contain a personal access token with push access to the repository, e.g. yours. You can create a new token under https://github.com/settings/tokens.
 
 1. Head over to [main.js](main.js) and start programming!
 
@@ -102,8 +102,8 @@ In order to install the adapter locally without publishing, the following steps 
 	```
 
 For later updates, the above procedure is not necessary. Just do the following:
-1. Overwrite the changed files in the adapter directory (`/opt/iobroker/node_modules/iobroker.unifi-protect-api`)
-1. Execute `iobroker upload unifi-protect-api` on the ioBroker host
+1. Overwrite the changed files in the adapter directory (`/opt/iobroker/node_modules/iobroker.unifi-protect-nvr`)
+1. Execute `iobroker upload unifi-protect-nvr` on the ioBroker host
 
 ## Changelog
 <!--

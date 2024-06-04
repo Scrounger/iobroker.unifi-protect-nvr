@@ -1,6 +1,6 @@
 {
 	"common": {
-		"name": "unifi-protect-api",
+		"name": "unifi-protect-nvr",
 		"version": "0.0.1",
 		"news": {
 			"0.0.1": {
@@ -17,19 +17,19 @@
 				"zh-cn": "首次出版"
 			}
 		},
-		"title": "Unifi Protect Api",
+		"title": "Unifi Protect NVR",
 		"titleLang": {
-			"en": "Unifi Protect Api",
-			"de": "Unifi Protect API",
-			"ru": "Unifi Protect API",
-			"pt": "API de proteção Unifi",
-			"nl": "Unifi Protect-API",
-			"fr": "API Unifi Protect",
-			"it": "Unifi Protect API",
-			"es": "API de protección Unifi",
-			"pl": "Unifi Protect API",
-			"uk": "Unifi Protect Api",
-			"zh-cn": "Unifi 保护 API"
+			"en": "Unifi Protect NVR",
+			"de": "Unifi Protect NVR",
+			"ru": "Unifi Protect NVR",
+			"pt": "Unifi Proteger NVR",
+			"nl": "Unifi Protect NVR",
+			"fr": "Unifi Protéger NVR",
+			"it": "Unifi Proteggi NVR",
+			"es": "Unifi protege NVR",
+			"pl": "Unifi Protect NVR",
+			"uk": "Unifi Protect NVR",
+			"zh-cn": "Unifi 保护 NVR"
 		},
 		"desc": {
 			"en": "Unifi Protect Adapter for ioBroker based on the unifi-protect library from hjdhjd",
@@ -50,9 +50,9 @@
 		"keywords": [
 			"unifi",
 			"protect",
+			"nvr",
 			"api",
-			"camera",
-			"nvr"
+			"camera"
 		],
 		"license": "MIT",
 		"licenseInformation": {
@@ -61,10 +61,10 @@
 		},
 		"platform": "Javascript/Node.js",
 		"main": "main.js",
-		"icon": "unifi-protect-api.svg",
+		"icon": "unifi-protect-nvr.svg",
 		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/Scrounger/ioBroker.unifi-protect-api/main/admin/unifi-protect-api.svg",
-		"readme": "https://github.com/Scrounger/ioBroker.unifi-protect-api/blob/main/README.md",
+		"extIcon": "https://raw.githubusercontent.com/Scrounger/ioBroker.unifi-protect-nvr/main/admin/unifi-protect-nvr.svg",
+		"readme": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr/blob/main/README.md",
 		"loglevel": "info",
 		"tier": 3,
 		"mode": "daemon",
