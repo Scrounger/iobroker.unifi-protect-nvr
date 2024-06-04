@@ -31,6 +31,10 @@ class UnifiProtectNvr extends utils.Adapter {
 			cameras: {}
 		};
 
+		this.eventStore = {
+			cameras: {}
+		};
+
 		this.aliveInterval = 15;
 		this.aliveTimeout = null;
 		this.aliveTimestamp = new Date().getTime();
@@ -266,7 +270,48 @@ class UnifiProtectNvr extends utils.Adapter {
 			} else if (event.header.modelKey === 'event') {
 				if (event.header.recordModel === 'camera') {
 					const cam = this.devices.cameras[event.header.recordId];
-					this.log.warn(`${this.ufp?.getDeviceName(cam)} - eventId: ${event.header.id}, payload: ${JSON.stringify(event.payload)}`);
+					this.onCamMotionEvent(cam, event.header, event.payload);
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	/**
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectKnownDeviceTypes} cam
+	 * @param {{ action?: string; id: any; modelKey?: string; newUpdateId?: string; mac?: string | undefined; nvrMac?: string | undefined; recordModel?: string | undefined; recordId?: string | undefined; }} header
+	 * @param {object} payload
+	 */
+	async onCamMotionEvent(cam, header, payload) {
+		const logPrefix = '[onMotionEvent]:';
+
+		try {
+			// motion events consist of three events (start, score, end)
+			if (this.ufp) {
+				this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
+
+				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
+					if (Object.prototype.hasOwnProperty.call(payload, 'start')) {
+						this.eventStore.cameras[header.id] = {
+							eventId: header.id,
+							type: payload.type,
+							start: payload.start
+						};
+					} else if (Object.prototype.hasOwnProperty.call(payload, 'score')) {
+						if (this.eventStore.cameras[header.id]) {
+							this.eventStore.cameras[header.id].score = payload.score;
+						}
+					} else if (Object.prototype.hasOwnProperty.call(payload, 'end')) {
+						if (this.eventStore.cameras[header.id]) {
+							this.eventStore.cameras[header.id].end = payload.end;
+
+							this.log.debug(`${logPrefix} motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
+							delete this.eventStore.cameras[header.id];
+						}
+					}
+				} else {
+					this.log.warn(`${logPrefix} event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
 				}
 			}
 		} catch (error) {
