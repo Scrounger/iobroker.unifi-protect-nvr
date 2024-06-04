@@ -58,64 +58,14 @@ class UnifiProtectNvr extends utils.Adapter {
 				const UnifiProtectImport = (await import('unifi-protect')).ProtectApi;
 				this.ufp = new UnifiProtectImport(this.log);
 
-				await this.initListener();
+				// listen to realtime events (must be given as function to be able to use this)
+				this.ufp.on('message', (event) => this.onProtectEvent(event));
+
 				await this.establishConnection(true);
+
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
-
-
-			// // Initialize your adapter here
-
-			// // The adapters config (in the instance object everything under the attribute "native") is accessible via
-			// // this.config:
-			// this.log.info('config option1: ' + this.config.option1);
-			// this.log.info('config option2: ' + this.config.option2);
-
-			// /*
-			// For every state in the system there has to be also an object of type state
-			// Here a simple template for a boolean variable named "testVariable"
-			// Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-			// */
-			// await this.setObjectNotExistsAsync('testVariable', {
-			// 	type: 'state',
-			// 	common: {
-			// 		name: 'testVariable',
-			// 		type: 'boolean',
-			// 		role: 'indicator',
-			// 		read: true,
-			// 		write: true,
-			// 	},
-			// 	native: {},
-			// });
-
-			// // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-			// this.subscribeStates('testVariable');
-			// // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-			// // this.subscribeStates('lights.*');
-			// // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-			// // this.subscribeStates('*');
-
-			// /*
-			// 	setState examples
-			// 	you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-			// */
-			// // the variable testVariable is set to true as command (ack=false)
-			// await this.setStateAsync('testVariable', true);
-
-			// // same thing, but the value is flagged "ack"
-			// // ack should be always set to true if the value is received from or acknowledged from the target system
-			// await this.setStateAsync('testVariable', { val: true, ack: true });
-
-			// // same thing, but the state is deleted after 30s (getState will return null afterwards)
-			// await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
-
-			// // examples for the checkPassword/checkGroup functions
-			// let result = await this.checkPasswordAsync('admin', 'iobroker');
-			// this.log.info('check user admin pw iobroker: ' + result);
-
-			// result = await this.checkGroupAsync('admin', 'admin');
-			// this.log.info('check group user admin group admin: ' + result);
 
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
@@ -301,31 +251,23 @@ class UnifiProtectNvr extends utils.Adapter {
 	}
 
 	/**
-	 * Initialize ufp listener to get event data
-	 * must be done before opening the connection
+	 @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectEventPacket} event
 	 */
-	async initListener() {
-		const logPrefix = '[initListener]:';
+	async onProtectEvent(event) {
+		const logPrefix = '[onProtectEvent]:';
 
 		try {
-			if (this.ufp) {
-				this.ufp.on('message', async (event) => {
-					// is used to check whether the connection to the controller exists
-					this.aliveTimestamp = new Date().getTime();
+			this.aliveTimestamp = new Date().getTime();
 
-					if (event.header.modelKey === 'camera') {
-						const camId = event.header.id;
+			if (event.header.modelKey === 'camera') {
+				const camId = event.header.id;
 
-
-
-						await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
-					} else if (event.header.modelKey === 'event') {
-						this.log.warn(JSON.stringify(event));
-					}
-				});
-				this.ufp.on('', async (event) => {
-					this.log.error(JSON.stringify(event));
-				});
+				await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
+			} else if (event.header.modelKey === 'event') {
+				if (event.header.recordModel === 'camera') {
+					const cam = this.devices.cameras[event.header.recordId];
+					this.log.warn(`${this.ufp?.getDeviceName(cam)} - eventId: ${event.header.id}, payload: ${JSON.stringify(event.payload)}`);
+				}
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
@@ -524,16 +466,6 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
-		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
-		}
-	}
-
-	async getCamerNameById(camId) {
-		const logPrefix = '[setConnectionStatus]:';
-
-		try {
-			this.log.warn(JSON.stringify(this.devices.cameras));
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
 		}
