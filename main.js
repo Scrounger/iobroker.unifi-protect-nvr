@@ -311,7 +311,11 @@ class UnifiProtectApi extends utils.Adapter {
 					if (event.header.modelKey === 'camera') {
 						const camId = event.header.id;
 
+
+
 						await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
+					} else if (event.header.modelKey === 'event') {
+						this.log.warn(JSON.stringify(event));
 					}
 				});
 				this.ufp.on('', async (event) => {
