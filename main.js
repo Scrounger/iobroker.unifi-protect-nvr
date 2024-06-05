@@ -42,6 +42,10 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.connectionMaxRetries = 200;
 		this.connectionRetries = 0;
 
+		this.paths = {
+			eventThumb: '/proxy/protect/api/events/{0}/thumbnail',
+		};
+
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
 		// this.on('objectChange', this.onObjectChange.bind(this));
@@ -287,32 +291,85 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[onMotionEvent]:';
 
 		try {
-			// motion events consist of three events (start, score, end)
+			// motion events consist multiple events
 			if (this.ufp) {
 				this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
+					let camId = `cameras.${cam.id}`;
+
 					if (Object.prototype.hasOwnProperty.call(payload, 'start')) {
+						// Motion event start -> start property is available
 						this.eventStore.cameras[header.id] = {
 							eventId: header.id,
 							type: payload.type,
-							start: payload.start
-						};
-					} else if (Object.prototype.hasOwnProperty.call(payload, 'score')) {
-						if (this.eventStore.cameras[header.id]) {
-							this.eventStore.cameras[header.id].score = payload.score;
-						}
-					} else if (Object.prototype.hasOwnProperty.call(payload, 'end')) {
-						if (this.eventStore.cameras[header.id]) {
-							this.eventStore.cameras[header.id].end = payload.end;
+							score: payload.score ? payload.score : 0,
+							start: payload.start,
 
-							this.log.debug(`${logPrefix} motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
-							delete this.eventStore.cameras[header.id];
+						};
+
+						// reset thumbnail at beginning of motion event
+						await this.setThumbState(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, null);
+					} else {
+						if (this.eventStore.cameras[header.id]) {
+							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
+							this.eventStore.cameras[header.id].end = payload?.end;
+
+							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
+								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
+								this.log.debug(`${logPrefix} motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
+
+								this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id);
+
+								delete this.eventStore.cameras[header.id];
+							}
 						}
 					}
-				} else {
+				} else if (Object.prototype.hasOwnProperty.call(payload, 'type')) {
 					this.log.warn(`${logPrefix} event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
 				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	async getEventThumb(targetId, eventId) {
+		const logPrefix = '[getEventThumb]:';
+
+		try {
+			if (this.ufp && this.isConnected) {
+				const url = `https://${this.config.host}${this.paths.eventThumb.replace('{0}', eventId)}`;
+				const response = await this.ufp.retrieve(url, undefined, true);
+
+				// response is from type Fetch (https://github.com/hjdhjd/unifi-protect/blob/main/docs/ProtectApi.md#retrieve)
+				if (response) {
+					if (response.ok) {
+						const imageBuffer = Buffer.from(await response.arrayBuffer());
+						const imageBase64 = imageBuffer.toString('base64');
+						const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
+
+						this.log.debug(`${logPrefix} thumb successfully received`);
+
+						await this.setThumbState(targetId, base64ImgString);
+					} else {
+						this.log.error(`${logPrefix} response code: ${response.status}`);
+					}
+				} else {
+					this.log.warn(`${logPrefix} no response from the server, no thumb found!`);
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	async setThumbState(id, val) {
+		const logPrefix = '[setThumbState]:';
+
+		try {
+			if (await this.objectExists(id)) {
+				await this.setStateAsync(id, val, true);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
