@@ -305,15 +305,21 @@ class UnifiProtectNvr extends utils.Adapter {
 							type: payload.type,
 							score: payload.score ? payload.score : 0,
 							start: payload.start,
-
+							snapshotTaken: false,
 						};
 
-						// reset thumbnail at beginning of motion event
-						await this.setThumbState(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, null);
+						// reset snapshot & thumbnail at beginning of motion event
+						await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, null);
+						await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, null);
 					} else {
 						if (this.eventStore.cameras[header.id]) {
 							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
 							this.eventStore.cameras[header.id].end = payload?.end;
+
+							if (!this.eventStore.cameras[header.id].snapshotTaken) {
+								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`);
+								this.eventStore.cameras[header.id].snapshotTaken = true;
+							}
 
 							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
 								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
@@ -351,7 +357,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						this.log.debug(`${logPrefix} thumb successfully received`);
 
-						await this.setThumbState(targetId, base64ImgString);
+						await this.setStateExists(targetId, base64ImgString);
 					} else {
 						this.log.error(`${logPrefix} response code: ${response.status}`);
 					}
@@ -364,17 +370,26 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async setThumbState(id, val) {
-		const logPrefix = '[setThumbState]:';
+	async getSnapshot(cam, targetId) {
+		const logPrefix = '[getSnapshot]:';
 
 		try {
-			if (await this.objectExists(id)) {
-				await this.setStateAsync(id, val, true);
+			const imageBuffer = await this.ufp?.getSnapshot(cam, 1280, 720);
+
+			if (imageBuffer) {
+				const imageBase64 = imageBuffer.toString('base64');
+				const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
+
+				this.log.debug(`${logPrefix} snapshot successfully received`);
+
+				await this.setStateExists(targetId, base64ImgString);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
 		}
 	}
+
+
 
 	/**
 	 * Check whether the connection to the controller exists, if not try to establish a new connection
@@ -429,7 +444,6 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
-
 				if (!await this.objectExists(`cameras.${cam.id}`)) {
 					// create cam channel
 					this.log.debug(`${logPrefix} creating channel '${cam.id}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
@@ -568,6 +582,23 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
+		} catch (error) {
+			this.log.error(`${logPrefix} ${error}`);
+		}
+	}
+
+	/** check if state exists before setting value
+	 * @param {string} id
+	 * @param {any} val
+	 */
+	async setStateExists(id, val) {
+		const logPrefix = '[setThumbState]:';
+
+		try {
+			if (await this.objectExists(id)) {
+				await this.setStateAsync(id, val, true);
+			}
+
 		} catch (error) {
 			this.log.error(`${logPrefix} ${error}`);
 		}
