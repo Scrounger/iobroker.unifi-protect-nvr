@@ -296,7 +296,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
-					let camId = `cameras.${cam.id}`;
+					const camId = `cameras.${cam.id}`;
 
 					if (Object.prototype.hasOwnProperty.call(payload, 'start')) {
 						// Motion event start -> start property is available
@@ -309,15 +309,18 @@ class UnifiProtectNvr extends utils.Adapter {
 						};
 
 						// reset snapshot & thumbnail at beginning of motion event
-						await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, null);
-						await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, null);
+						if (this.config.motionSnapshot)
+							await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, '');
+
+						if (this.config.motionThumb)
+							await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
 					} else {
 						if (this.eventStore.cameras[header.id]) {
 							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
 							this.eventStore.cameras[header.id].end = payload?.end;
 
-							if (!this.eventStore.cameras[header.id].snapshotTaken) {
-								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`);
+							if (this.config.motionSnapshot && !this.eventStore.cameras[header.id].snapshotTaken) {
+								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}
 
@@ -325,7 +328,8 @@ class UnifiProtectNvr extends utils.Adapter {
 								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
 								this.log.debug(`${logPrefix} motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
 
-								this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id);
+								if (this.config.motionThumb)
+									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id);
 
 								delete this.eventStore.cameras[header.id];
 							}
@@ -370,11 +374,11 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async getSnapshot(cam, targetId) {
+	async getSnapshot(cam, targetId, width, height) {
 		const logPrefix = '[getSnapshot]:';
 
 		try {
-			const imageBuffer = await this.ufp?.getSnapshot(cam, 1280, 720);
+			const imageBuffer = await this.ufp?.getSnapshot(cam, width, height);
 
 			if (imageBuffer) {
 				const imageBase64 = imageBuffer.toString('base64');

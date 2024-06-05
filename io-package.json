@@ -89,7 +89,11 @@
 	"native": {
 		"host": "",
 		"user": "",
-		"password": ""
+		"password": "",
+		"motionSnapshot": false,
+		"motionSnapshotWidth": 1280,
+		"motionSnapshotHeight": 720,
+		"motionThumb": false
 	},
 	"objects": [],
 	"instanceObjects": [

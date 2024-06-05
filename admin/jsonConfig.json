@@ -14,6 +14,26 @@
 		"password": {
 			"type": "password",
 			"label": "Password"
+		},
+		"motionSnapshot": {
+			"type": "checkbox",
+			"label": "Motion Snapshot",
+			"newLine": true
+		},
+		"motionSnapshotWidth": {
+			"type": "number",
+			"label": "Motion Snapshot Width",
+			"disabled": "!data.motionSnapshot"
+		},
+		"motionSnapshotHeight": {
+			"type": "number",
+			"label": "Motion Snapshot Height",
+			"disabled": "!data.motionSnapshot"
+		},
+		"motionThumb": {
+			"type": "checkbox",
+			"label": "Motion Thumbnail",
+			"newLine": true
 		}
 	}
 }
