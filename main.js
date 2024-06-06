@@ -308,8 +308,9 @@ class UnifiProtectNvr extends utils.Adapter {
 							eventId: header.id,
 							type: payload.type,
 							score: payload.score ? payload.score : 0,
-							start: payload.start,
 							snapshotTaken: false,
+							smartTypes: payload.smartDetectTypes ? payload.smartDetectTypes : [],
+							start: payload.start,
 						};
 
 						// set custom types - using eventStore because conversions may be defined here
@@ -317,6 +318,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionStart.id}`, this.eventStore.cameras[header.id].start);
 						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, null);
 						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score);
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSmartTypes.id}`, this.eventStore.cameras[header.id].smartTypes);
 
 						// reset snapshot at beginning of motion event
 						if (this.config.motionSnapshot)
@@ -338,6 +340,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						if (this.eventStore.cameras[header.id]) {
 							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
 							this.eventStore.cameras[header.id].end = payload?.end;
+							this.eventStore.cameras[header.id].smartTypes = payload.smartDetectTypes ? payload.smartDetectTypes : this.eventStore.cameras[header.id].smartTypes;
 
 							// Snapshot configured -1 = auto
 							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
@@ -352,6 +355,7 @@ class UnifiProtectNvr extends utils.Adapter {
 								// set custom types
 								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, this.eventStore.cameras[header.id].end);
 								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score, true);
+								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSmartTypes.id}`, this.eventStore.cameras[header.id].smartTypes, true);
 
 								if (this.config.motionThumb)
 									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
