@@ -11,6 +11,8 @@ const utils = require('@iobroker/adapter-core');
 const myDeviceTypes = require('./lib/devices');
 const myHelper = require('./lib/helper');
 
+const fs = require('fs');
+
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
@@ -47,6 +49,12 @@ class UnifiProtectNvr extends utils.Adapter {
 			eventAnimatedThumb: '/proxy/protect/api/events/{0}/animated-thumbnail'
 		};
 
+		this.defaultImage = {
+			snapshot: '',
+			thumbnail: '',
+			thumbnailAnimated: ''
+		};
+
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
 		// this.on('objectChange', this.onObjectChange.bind(this));
@@ -61,6 +69,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[onReady]:';
 
 		try {
+			this.setDefaultImages();
+
 			if (this.config.host, this.config.user, this.config.password) {
 				this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
 
@@ -72,6 +82,13 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				await this.establishConnection(true);
 
+				// const files = await this.readDirAsync(this.namespace, '/opt/iobroker/iobroker-data/files');
+
+				// // const imageBuffer = Buffer.from(tmp.file);
+				// // const imageBase64 = imageBuffer.toString('base64');
+				// // const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
+
+				// this.log.warn(JSON.stringify(files));
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
@@ -319,16 +336,13 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id]);
 
 						// reset snapshot at beginning of motion event
-						if (this.config.motionSnapshot)
-							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, '');
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.defaultImage.snapshot, true);
 
 						// reset thumbnail at beginning of motion event
-						if (this.config.motionThumb)
-							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, this.defaultImage.thumbnail, true);
 
 						// reset thumbnail animated at beginning of motion event
-						if (this.config.motionThumbAnimated)
-							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, '');
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, this.defaultImage.thumbnailAnimated, true);
 
 						// Snapshot Delay configured
 						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
@@ -711,6 +725,44 @@ class UnifiProtectNvr extends utils.Adapter {
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
+	}
+
+	async setDefaultImages() {
+		const logPrefix = '[setDefaultImages]:';
+
+		try {
+			this.defaultImage.snapshot = await this.loadDefaultImage('defaultSnapshot.png');
+			this.defaultImage.thumbnail = await this.loadDefaultImage('defaultThumbnail.png');
+			this.defaultImage.thumbnailAnimated = await this.loadDefaultImage('defaultThumbnailAnimated.png');
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async loadDefaultImage(fileName) {
+		const logPrefix = '[loadDefaultImage]:';
+
+		try {
+			if (!await this.fileExistsAsync(this.namespace, fileName)) {
+				const logoFile = fs.readFileSync('./admin/unifi-protect-nvr.png');
+				await this.writeFileAsync(this.namespace, fileName, logoFile);
+			}
+
+			const img = await this.readFileAsync(this.namespace, fileName);
+
+			const imageBuffer = Buffer.from(img.file);
+			const imageBase64 = imageBuffer.toString('base64');
+			const base64ImgString = `data:image/png;base64,` + imageBase64;
+
+			this.log.debug(`${logPrefix} default image '${fileName}' loaded`);
+
+			return base64ImgString;
+
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+
+		return '';
 	}
 }
 
