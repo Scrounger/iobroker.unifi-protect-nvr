@@ -2,58 +2,121 @@
 	"i18n": true,
 	"type": "panel",
 	"items": {
+		"dividerCredentials": {
+			"newLine": true,
+			"type": "header",
+			"text": "credentials",
+			"size": 2
+		},
 		"host": {
 			"type": "text",
 			"label": "IP Adress / Hostname",
-			"newLine": true
+			"newLine": true,
+			"sm": 12,
+			"md": 2
 		},
 		"user": {
 			"type": "text",
-			"label": "Username"
+			"label": "Username",
+			"sm": 12,
+			"md": 2
 		},
 		"password": {
 			"type": "password",
-			"label": "Password"
+			"label": "Password",
+			"sm": 12,
+			"md": 2
+		},
+		"dividerMotion Events": {
+			"newLine": true,
+			"type": "header",
+			"text": "motion events",
+			"size": 2
 		},
 		"motionSnapshot": {
 			"type": "checkbox",
 			"label": "Motion Snapshot",
-			"newLine": true
+			"newLine": true,
+			"sm": 12,
+			"md": 2
 		},
 		"motionSnapshotWidth": {
 			"type": "number",
 			"label": "Motion Snapshot Width",
 			"min": 0,
-			"disabled": "!data.motionSnapshot"
+			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
 		},
 		"motionSnapshotHeight": {
 			"type": "number",
 			"label": "Motion Snapshot Height",
 			"min": 0,
-			"disabled": "!data.motionSnapshot"
+			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
 		},
 		"motionSnapshotDelay": {
 			"type": "number",
 			"label": "Motion Snapshot Delay (-1 = auto)",
 			"min": -1,
-			"disabled": "!data.motionSnapshot"
+			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
 		},
 		"motionThumb": {
 			"type": "checkbox",
 			"label": "Motion Thumbnail",
-			"newLine": true
+			"newLine": true,
+			"sm": 12,
+			"md": 2
 		},
 		"motionThumbWidth": {
 			"type": "number",
 			"label": "Motion Thumbnail Width",
 			"min": 0,
-			"disabled": "!data.motionThumb"
+			"disabled": "!data.motionThumb",
+			"sm": 12,
+			"md": 2
 		},
 		"motionThumbHeight": {
 			"type": "number",
 			"label": "Motion Thumbnail Height",
 			"min": 0,
-			"disabled": "!data.motionThumb"
+			"disabled": "!data.motionThumb",
+			"sm": 12,
+			"md": 2
+		},
+		"motionThumbAnimated": {
+			"type": "checkbox",
+			"label": "Motion Animated Thumbnail",
+			"newLine": true,
+			"sm": 12,
+			"md": 2
+		},
+		"motionThumbAnimatedWidth": {
+			"type": "number",
+			"label": "Motion Animated Thumbnail Width",
+			"min": 0,
+			"disabled": "!data.motionThumbAnimated",
+			"sm": 12,
+			"md": 2
+		},
+		"motionThumbAnimatedHeight": {
+			"type": "number",
+			"label": "Motion Animated Thumbnail Height",
+			"min": 0,
+			"disabled": "!data.motionThumbAnimated",
+			"sm": 12,
+			"md": 2
+		},
+		"motionThumbAnimatedSpeedUp": {
+			"type": "number",
+			"label": "Motion Animated Thumbnail SpeedUp",
+			"min": 0,
+			"disabled": "!data.motionThumbAnimated",
+			"sm": 12,
+			"md": 2
 		}
 	}
 }

@@ -96,7 +96,11 @@
 		"motionSnapshotDelay": 0,
 		"motionThumb": false,
 		"motionThumbWidth": 360,
-		"motionThumbHeight": 360
+		"motionThumbHeight": 360,
+		"motionThumbAnimated": false,
+		"motionThumbAnimatedWidth": 480,
+		"motionThumbAnimatedHeight": 270,
+		"motionThumbAnimatedSpeedUp": 10
 	},
 	"objects": [],
 	"instanceObjects": [
