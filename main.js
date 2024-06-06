@@ -76,7 +76,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			}
 
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -155,7 +155,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.warn(`${logPrefix} No Connection to the Unifi-Controller, '${id}' cannot be written!`);
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -196,7 +196,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			}, this.aliveInterval * 1000);
 
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -223,7 +223,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 
 		await this.setConnectionStatus(false);
@@ -254,7 +254,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			}
 
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -278,7 +278,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -312,42 +312,46 @@ class UnifiProtectNvr extends utils.Adapter {
 							snapshotTaken: false,
 						};
 
-						// set custom types
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionType.id}`, payload.type);
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionStart.id}`, payload.start);
+						// set custom types - using eventStore because conversions may be defined here
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionType.id}`, this.eventStore.cameras[header.id].type);
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionStart.id}`, this.eventStore.cameras[header.id].start);
 						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, null);
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score);
 
-						// reset snapshot & thumbnail at beginning of motion event
+						// reset snapshot at beginning of motion event
 						if (this.config.motionSnapshot)
 							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, '');
 
+						// reset thumbnail at beginning of motion event
 						if (this.config.motionThumb)
 							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
 
+						// Snapshot Delay configured
 						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
-							// Snapshot Delay configured
 							setTimeout(() => {
 								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}, this.config.motionSnapshotDelay * 1000);
 						}
 					} else {
+						// following events, have the same eventId
 						if (this.eventStore.cameras[header.id]) {
 							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
 							this.eventStore.cameras[header.id].end = payload?.end;
 
+							// Snapshot configured -1 = auto
 							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
-								// Snapshot configured -1 = auto
 								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}
 
+							// Motion event finished -> paylod have 'metadata.detectedThumbnails'
 							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
-								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
 								this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
 
 								// set custom types
 								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, this.eventStore.cameras[header.id].end);
+								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score, true);
 
 								if (this.config.motionThumb)
 									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
@@ -361,7 +365,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -391,7 +395,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -410,7 +414,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				await this.setStateExists(targetId, base64ImgString);
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -457,7 +461,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -480,7 +484,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam);
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -496,77 +500,80 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			// {@link myDevices}
 			for (const id in deviceTypes) {
-				if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type')) {
-					// if we have a 'type' property, then it's a state
-					let stateId = id;
+				try {
+					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type')) {
+						// if we have a 'type' property, then it's a state
+						let stateId = id;
 
-					if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
-						// if we have a custom state, use defined id
-						stateId = deviceTypes[id].id;
-					}
-
-					if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
-						this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
-						const obj = {
-							type: 'state',
-							common: {
-								name: deviceTypes[id].name ? deviceTypes[id].name : id,
-								type: deviceTypes[id].type,
-								read: true,
-								write: deviceTypes[id].write ? deviceTypes[id].write : false,
-								role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
-								unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
-							},
-							native: {}
-						};
-
-						if (deviceTypes[id].states) {
-							obj.common.states = deviceTypes[id].states;
+						if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+							// if we have a custom state, use defined id
+							stateId = deviceTypes[id].id;
 						}
 
-						// @ts-ignore
-						await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
-					}
+						if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
+							this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
+							const obj = {
+								type: 'state',
+								common: {
+									name: deviceTypes[id].name ? deviceTypes[id].name : id,
+									type: deviceTypes[id].type,
+									read: true,
+									write: deviceTypes[id].write ? deviceTypes[id].write : false,
+									role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
+									unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
+								},
+								native: {}
+							};
 
-					if (deviceTypes[id].write && deviceTypes[id].write === true) {
-						// state is writeable -> subscribe it
-						this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
-						await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
-					}
+							if (deviceTypes[id].states) {
+								obj.common.states = deviceTypes[id].states;
+							}
 
-					if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
-						// write current val to state
-						if (deviceTypes[id].convertVal) {
-							await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+							// @ts-ignore
+							await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
+						}
+
+						if (deviceTypes[id].write && deviceTypes[id].write === true) {
+							// state is writeable -> subscribe it
+							this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
+							await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
+						}
+
+						if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
+							// write current val to state
+							if (deviceTypes[id].convertVal) {
+								await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+							} else {
+								await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
+							}
 						} else {
-							await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
+							if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+								// only report it if it's not a custom defined state
+								this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
+							}
 						}
 					} else {
-						if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
-							// only report it if it's not a custom defined state
-							this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
+						// it's a channel, create it and iterate again over the properties
+						if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
+							this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
+
+							await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+								type: 'channel',
+								common: {
+									name: id
+								},
+								native: {}
+							});
+
 						}
+						await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id]);
 					}
-				} else {
-					// it's a channel, create it and iterate again over the properties
-					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
-						this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
-
-						await this.setObjectAsync(`${parent}.${channel}.${id}`, {
-							type: 'channel',
-							common: {
-								name: id
-							},
-							native: {}
-						});
-
-					}
-					await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id]);
+				} catch (error) {
+					this.log.error(`${logPrefix} [id: ${id}] error: ${error}, stack: ${error.stack}`);
 				}
 			}
-
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -604,7 +611,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -618,7 +625,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
@@ -626,16 +633,20 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {string} id
 	 * @param {any} val
 	 */
-	async setStateExists(id, val) {
+	async setStateExists(id, val, onlyChanges = false) {
 		const logPrefix = '[setThumbState]:';
 
 		try {
 			if (await this.objectExists(id)) {
-				await this.setStateAsync(id, val, true);
+				if (!onlyChanges) {
+					await this.setStateAsync(id, val, true);
+				} else {
+					await this.setStateChangedAsync(id, val, true);
+				}
 			}
 
 		} catch (error) {
-			this.log.error(`${logPrefix} ${error}`);
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 }
