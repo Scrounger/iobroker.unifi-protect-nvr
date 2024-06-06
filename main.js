@@ -312,12 +312,17 @@ class UnifiProtectNvr extends utils.Adapter {
 							snapshotTaken: false,
 						};
 
+						// set custom types
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionType.id}`, payload.type);
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionStart.id}`, payload.start);
+						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, null);
+
 						// reset snapshot & thumbnail at beginning of motion event
 						if (this.config.motionSnapshot)
-							await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, '');
+							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, '');
 
 						if (this.config.motionThumb)
-							await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
+							this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
 
 						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
 							// Snapshot Delay configured
@@ -340,6 +345,9 @@ class UnifiProtectNvr extends utils.Adapter {
 							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
 								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
 								this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
+
+								// set custom types
+								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, this.eventStore.cameras[header.id].end);
 
 								if (this.config.motionThumb)
 									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
