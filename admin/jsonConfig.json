@@ -23,11 +23,19 @@
 		"motionSnapshotWidth": {
 			"type": "number",
 			"label": "Motion Snapshot Width",
+			"min": 0,
 			"disabled": "!data.motionSnapshot"
 		},
 		"motionSnapshotHeight": {
 			"type": "number",
 			"label": "Motion Snapshot Height",
+			"min": 0,
+			"disabled": "!data.motionSnapshot"
+		},
+		"motionSnapshotDelay": {
+			"type": "number",
+			"label": "Motion Snapshot Delay (-1 = auto)",
+			"min": -1,
 			"disabled": "!data.motionSnapshot"
 		},
 		"motionThumb": {

@@ -93,6 +93,7 @@
 		"motionSnapshot": false,
 		"motionSnapshotWidth": 1280,
 		"motionSnapshotHeight": 720,
+		"motionSnapshotDelay": 0,
 		"motionThumb": false
 	},
 	"objects": [],

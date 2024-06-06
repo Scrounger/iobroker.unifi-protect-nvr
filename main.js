@@ -314,13 +314,22 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						if (this.config.motionThumb)
 							await this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, '');
+
+						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
+							// Snapshot Delay configured
+							setTimeout(() => {
+								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id);
+								this.eventStore.cameras[header.id].snapshotTaken = true;
+							}, this.config.motionSnapshotDelay * 1000);
+						}
 					} else {
 						if (this.eventStore.cameras[header.id]) {
 							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
 							this.eventStore.cameras[header.id].end = payload?.end;
 
-							if (this.config.motionSnapshot && !this.eventStore.cameras[header.id].snapshotTaken) {
-								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight);
+							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
+								// Snapshot configured -1 = auto
+								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}
 
@@ -359,7 +368,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						const imageBase64 = imageBuffer.toString('base64');
 						const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
 
-						this.log.debug(`${logPrefix} thumb successfully received`);
+						this.log.debug(`${logPrefix} thumb successfully received (eventId: ${eventId})`);
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
@@ -374,7 +383,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async getSnapshot(cam, targetId, width, height) {
+	async getSnapshot(cam, targetId, width, height, eventId) {
 		const logPrefix = '[getSnapshot]:';
 
 		try {
@@ -384,7 +393,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				const imageBase64 = imageBuffer.toString('base64');
 				const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
 
-				this.log.debug(`${logPrefix} snapshot successfully received`);
+				this.log.debug(`${logPrefix} snapshot successfully received (eventId: ${eventId})`);
 
 				await this.setStateExists(targetId, base64ImgString);
 			}
@@ -502,7 +511,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 					if (deviceTypes[id].write && deviceTypes[id].write === true) {
 						// state is writeable -> subscribe it
-						this.log.debug(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
+						this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
 						await this.subscribeStatesAsync(`${parent}.${channel}.${id}`);
 					}
 
@@ -514,7 +523,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
 						}
 					} else {
-						this.log.debug(`${logPrefix} property '${channel}.${id}' not exists on values of object`);
+						this.log.warn(`${logPrefix} property '${channel}.${id}' not exists on bootstrap values`);
 					}
 				} else {
 					// it's a channel, create it and iterate again over the properties
@@ -561,7 +570,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							const oldState = await this.getStateAsync(id);
 
 							if (oldState && oldState.val !== val) {
-								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(this.devices.cameras[idDevice])} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
+								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(this.devices.cameras[idDevice])} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
 							}
 						}
 
