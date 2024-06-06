@@ -94,7 +94,9 @@
 		"motionSnapshotWidth": 1280,
 		"motionSnapshotHeight": 720,
 		"motionSnapshotDelay": 0,
-		"motionThumb": false
+		"motionThumb": false,
+		"motionThumbWidth": 360,
+		"motionThumbHeight": 360
 	},
 	"objects": [],
 	"instanceObjects": [

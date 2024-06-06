@@ -42,6 +42,18 @@
 			"type": "checkbox",
 			"label": "Motion Thumbnail",
 			"newLine": true
+		},
+		"motionThumbWidth": {
+			"type": "number",
+			"label": "Motion Thumbnail Width",
+			"min": 0,
+			"disabled": "!data.motionThumb"
+		},
+		"motionThumbHeight": {
+			"type": "number",
+			"label": "Motion Thumbnail Height",
+			"min": 0,
+			"disabled": "!data.motionThumb"
 		}
 	}
 }

@@ -293,6 +293,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			// motion events consist multiple events
 			if (this.ufp) {
+				// ToDo: log level silly
 				this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
@@ -300,6 +301,9 @@ class UnifiProtectNvr extends utils.Adapter {
 
 					if (Object.prototype.hasOwnProperty.call(payload, 'start')) {
 						// Motion event start -> start property is available
+
+						this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event start (type: ${payload.type})`);
+
 						this.eventStore.cameras[header.id] = {
 							eventId: header.id,
 							type: payload.type,
@@ -335,10 +339,10 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
 								// Motion event finished -> paylod have 'metadata.detectedThumbnails'
-								this.log.debug(`${logPrefix} motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
+								this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
 
 								if (this.config.motionThumb)
-									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id);
+									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
 
 								delete this.eventStore.cameras[header.id];
 							}
@@ -353,12 +357,12 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async getEventThumb(targetId, eventId) {
+	async getEventThumb(targetId, eventId, width, height) {
 		const logPrefix = '[getEventThumb]:';
 
 		try {
 			if (this.ufp && this.isConnected) {
-				const url = `https://${this.config.host}${this.paths.eventThumb.replace('{0}', eventId)}`;
+				const url = `https://${this.config.host}${this.paths.eventThumb.replace('{0}', eventId)}?w=${width}&h=${height}`;
 				const response = await this.ufp.retrieve(url, undefined, true);
 
 				// response is from type Fetch (https://github.com/hjdhjd/unifi-protect/blob/main/docs/ProtectApi.md#retrieve)
@@ -429,7 +433,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.stop();
 					}
 				} else {
-					this.log.debug(`${logPrefix} Connection to the Unifi-Protect controller is alive (last alive signal is ${diff}s old)`);
+					this.log.silly(`${logPrefix} Connection to the Unifi-Protect controller is alive (last alive signal is ${diff}s old)`);
 
 					await this.setConnectionStatus(true);
 					this.connectionRetries = 0;
@@ -523,7 +527,10 @@ class UnifiProtectNvr extends utils.Adapter {
 							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
 						}
 					} else {
-						this.log.warn(`${logPrefix} property '${channel}.${id}' not exists on bootstrap values`);
+						if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+							// only report it if it's not a custom defined state
+							this.log.warn(`${logPrefix} property '${channel}.${id}' not exists in bootstrap values`);
+						}
 					}
 				} else {
 					// it's a channel, create it and iterate again over the properties
