@@ -498,9 +498,15 @@ class UnifiProtectNvr extends utils.Adapter {
 			for (const id in deviceTypes) {
 				if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type')) {
 					// if we have a 'type' property, then it's a state
+					let stateId = id;
 
-					if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
-						this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${id}'`);
+					if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+						// if we have a custom state, use defined id
+						stateId = deviceTypes[id].id;
+					}
+
+					if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
+						this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
 						const obj = {
 							type: 'state',
 							common: {
@@ -509,7 +515,7 @@ class UnifiProtectNvr extends utils.Adapter {
 								read: true,
 								write: deviceTypes[id].write ? deviceTypes[id].write : false,
 								role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
-								unit: deviceTypes[id].unit ? deviceTypes[id].unit : '',
+								unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
 							},
 							native: {}
 						};
@@ -518,26 +524,27 @@ class UnifiProtectNvr extends utils.Adapter {
 							obj.common.states = deviceTypes[id].states;
 						}
 
-						await this.setObjectAsync(`${parent}.${channel}.${id}`, obj);
+						// @ts-ignore
+						await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
 					}
 
 					if (deviceTypes[id].write && deviceTypes[id].write === true) {
 						// state is writeable -> subscribe it
 						this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
-						await this.subscribeStatesAsync(`${parent}.${channel}.${id}`);
+						await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
 					}
 
 					if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
 						// write current val to state
 						if (deviceTypes[id].convertVal) {
-							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, deviceTypes[id].convertVal(objValues[id]), true);
+							await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
 						} else {
-							await this.setStateChangedAsync(`${parent}.${channel}.${id}`, objValues[id], true);
+							await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
 						}
 					} else {
 						if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 							// only report it if it's not a custom defined state
-							this.log.warn(`${logPrefix} property '${channel}.${id}' not exists in bootstrap values`);
+							this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
 						}
 					}
 				} else {
