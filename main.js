@@ -305,20 +305,18 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event start (type: ${payload.type})`);
 
 						this.eventStore.cameras[header.id] = {
-							eventId: header.id,
-							type: payload.type,
-							score: payload.score ? payload.score : 0,
+							// properties must be equal to the defined properties in {@link myDeviceTypes} -> used in function 'setCustomMotionEventStates'
+							lastMotionEventId: header.id,
 							snapshotTaken: false,
-							smartTypes: payload.smartDetectTypes ? payload.smartDetectTypes : [],
-							start: payload.start,
+							lastMotionType: payload.type,
+							lastMotionScore: payload.score ? payload.score : 0,
+							lastMotionSmartTypes: payload.smartDetectTypes && payload.smartDetectTypes.length > 0 ? payload.smartDetectTypes : ['none'],
+							lastMotionStart: payload.start,
+							lastMotionEnd: null
 						};
 
-						// set custom types - using eventStore because conversions may be defined here
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionType.id}`, this.eventStore.cameras[header.id].type);
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionStart.id}`, this.eventStore.cameras[header.id].start);
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, null);
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score);
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSmartTypes.id}`, this.eventStore.cameras[header.id].smartTypes);
+						// set custom states - using eventStore because conversions may be defined here
+						this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id]);
 
 						// reset snapshot at beginning of motion event
 						if (this.config.motionSnapshot)
@@ -338,9 +336,9 @@ class UnifiProtectNvr extends utils.Adapter {
 					} else {
 						// following events, have the same eventId
 						if (this.eventStore.cameras[header.id]) {
-							this.eventStore.cameras[header.id].score = payload.score ? payload.score : this.eventStore.cameras[header.id].score;
-							this.eventStore.cameras[header.id].end = payload?.end;
-							this.eventStore.cameras[header.id].smartTypes = payload.smartDetectTypes ? payload.smartDetectTypes : this.eventStore.cameras[header.id].smartTypes;
+							this.eventStore.cameras[header.id].lastMotionScore = payload.score ? payload.score : this.eventStore.cameras[header.id].lastMotionScore;
+							this.eventStore.cameras[header.id].lastMotionEnd = payload.end ? payload.end : this.eventStore.cameras[header.id].lastMotionEnd;
+							this.eventStore.cameras[header.id].lastMotionSmartTypes = payload.smartDetectTypes ? payload.smartDetectTypes : this.eventStore.cameras[header.id].lastMotionSmartTypes;
 
 							// Snapshot configured -1 = auto
 							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
@@ -352,10 +350,8 @@ class UnifiProtectNvr extends utils.Adapter {
 							if (Object.prototype.hasOwnProperty.call(payload, 'metadata') && Object.prototype.hasOwnProperty.call(payload['metadata'], 'detectedThumbnails')) {
 								this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - motion event finished (eventStore: ${JSON.stringify(this.eventStore.cameras[header.id])})`);
 
-								// set custom types
-								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionEnd.id}`, this.eventStore.cameras[header.id].end);
-								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionScore.id}`, this.eventStore.cameras[header.id].score, true);
-								this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSmartTypes.id}`, this.eventStore.cameras[header.id].smartTypes, true);
+								// set custom states - using eventStore because conversions may be defined here
+								this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id], true);
 
 								if (this.config.motionThumb)
 									this.getEventThumb(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
@@ -628,6 +624,30 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+
+	/** settings values for all states that are available in eventStore
+	 * @param {string} channelId
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectKnownDeviceTypes} cam
+	 * @param {object} eventStoreObj
+	 */
+	async setCustomMotionEventStates(channelId, cam, eventStoreObj, onlyChanges = false) {
+		const logPrefix = '[setCustomMotionEventStates]:';
+
+		try {
+			for (const key in eventStoreObj) {
+				if (Object.prototype.hasOwnProperty.call(myDeviceTypes.cameras, key)) {
+					const id = `${channelId}.${cam.id}.${myDeviceTypes.cameras[key].id}`;
+					const val = myDeviceTypes.cameras[key].convertVal ? myDeviceTypes.cameras[key].convertVal(eventStoreObj[key]) : eventStoreObj[key];
+
+					await this.setStateExists(id, val, onlyChanges);
+					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)}, eventId: ${eventStoreObj.eventId} - update state '${id}': ${val}`);
+				}
+			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
