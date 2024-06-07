@@ -57,7 +57,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		};
 
 		this.configFilterList = [];		// List for AutoComplete in adapter settings
-		this.statesFilterList = [];			// prepared List for filtering out states
+		this.blacklistedStates = [];			// prepared List for filtering out states
 
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
@@ -66,8 +66,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.on('unload', this.onUnload.bind(this));
 	}
 
-	/**
-	 * Is called when databases are connected and adapter received configuration.
+	/** Is called when databases are connected and adapter received configuration.
 	 */
 	async onReady() {
 		const logPrefix = '[onReady]:';
@@ -75,7 +74,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.setDefaultImages();
 
-			await this.prepareStatesFilterList();
+			await this.prepareBlacklistedStates();
 
 			if (this.config.host, this.config.user, this.config.password) {
 				this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
@@ -96,8 +95,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/**
-	 * Is called when adapter shuts down - callback has to be called under any circumstances!
+	/** Is called when adapter shuts down - callback has to be called under any circumstances!
 	 * @param {() => void} callback
 	 */
 	onUnload(callback) {
@@ -137,8 +135,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	// 	}
 	// }
 
-	/**
-	 * Is called if a subscribed state changes
+	/** Is called if a subscribed state changes
 	 * @param {string} id
 	 * @param {ioBroker.State | null | undefined} state
 	 */
@@ -450,6 +447,13 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** take a snap shot using the ufp lib
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
+	 * @param {string} targetId state where the base64 image or url should be stored
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {any} eventId
+	 */
 	async getSnapshot(cam, targetId, width, height, eventId) {
 		const logPrefix = '[getSnapshot]:';
 
@@ -473,8 +477,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 
 
-	/**
-	 * Check whether the connection to the controller exists, if not try to establish a new connection
+	/** Check whether the connection to the controller exists, if not try to establish a new connection
 	 */
 	async aliveChecker() {
 		const logPrefix = '[aliveChecker]:';
@@ -569,7 +572,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							// if we have a custom state, use defined id
 							stateId = deviceTypes[id].id;
 						}
-						if (!this.statesFilterList.includes(`${filterComparisonId}.${id}`)) {
+						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
 							// not on blacklist
 
 							if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
@@ -679,11 +682,16 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				}
 			}
+			this.creat
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
+	/** create list of all states for adapter config (sendTo from frontend)
+	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
+	 * @param {string} idPrefix
+	 */
 	async createConfigFilterList(deviceTypes, idPrefix = '') {
 		const logPrefix = '[createFilterList]:';
 
@@ -712,15 +720,18 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async prepareStatesFilterList() {
-		const logPrefix = '[prepareFilterList]:';
+	/** transform adapter config blacklisted states into to an array
+	 */
+	async prepareBlacklistedStates() {
+		const logPrefix = '[prepareBlacklistedStates]:';
 
 		try {
-			for (const key in this.config.statesFilter) {
-				if (this.config.statesFilter[key]) {
-					this.statesFilterList.push(this.config.statesFilter[key].id);
+			for (const key in this.config.blacklistedStates) {
+				if (this.config.blacklistedStates[key]) {
+					this.blacklistedStates.push(this.config.blacklistedStates[key].id);
 				}
 			}
+			this.log.debug(`${logPrefix} blacklist states: ${JSON.stringify(this.blacklistedStates)}`);
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -785,6 +796,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** set default images for snapshot, thumbnail and thumbnailAnimated - will be shown if no image is available / loading
+	 */
 	async setDefaultImages() {
 		const logPrefix = '[setDefaultImages]:';
 
@@ -797,6 +810,10 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** copy default images to instance folder (e.g. /unifi-protect-nvr.0/) if not exists and load them
+	 * @param {string} fileName
+	 * @returns base64 image string
+	 */
 	async loadDefaultImage(fileName) {
 		const logPrefix = '[loadDefaultImage]:';
 

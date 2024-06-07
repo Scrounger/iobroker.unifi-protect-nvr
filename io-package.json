@@ -102,7 +102,7 @@
 		"motionThumbAnimatedWidth": 480,
 		"motionThumbAnimatedHeight": 270,
 		"motionThumbAnimatedSpeedUp": 10,
-		"statesFilter": [
+		"blacklistedStates": [
 			{
 				"id": "cameras.id"
 			},
