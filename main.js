@@ -7,10 +7,12 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
+const moment = require('moment');
 
 const myDeviceTypes = require('./lib/devices');
 const myDeviceImages = require('./lib/deviceImages');
 const myHelper = require('./lib/helper');
+
 
 const fs = require('fs');
 
@@ -72,6 +74,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[onReady]:';
 
 		try {
+			await this.getLanguage();
+
 			this.setDefaultImages();
 
 			await this.prepareBlacklistedStates();
@@ -86,6 +90,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.ufp.on('message', (event) => this.onProtectEvent(event));
 
 				await this.establishConnection(true);
+
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
@@ -466,7 +471,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			const logPrefix = `[getSnapshot]: ${this.ufp.getDeviceName(cam)} - `;
 
 			try {
-				const imageBuffer = await this.ufp.getSnapshot(cam, width, height);
+				const now = moment();
+				const imageBuffer = await this.ufp.getSnapshot(cam, width, height, now.valueOf());
 
 				if (imageBuffer) {
 					if (base64Image) {
@@ -477,7 +483,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
-						const filename = `/cameras/${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${new Date().getTime()}.png`;
+						const filename = `/cameras/${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format('YYYY_MM_DD_HH_mm_ss')}.png`;
 
 						await this.writeFileAsync(this.namespace, filename, imageBuffer);
 
@@ -853,6 +859,26 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 
 		return '';
+	}
+
+	async getLanguage() {
+		const logPrefix = '[getLanguage]:';
+
+		try {
+			const sysConfig = await this.getForeignObjectAsync('system.config');
+
+			if (sysConfig && sysConfig.common && sysConfig.common['language']) {
+				this.language = sysConfig.common['language'];
+			} else {
+				this.language = 'en';
+			}
+
+			moment.locale(this.language);
+
+			this.log.warn(`${logPrefix} system language is '${this.language}'`);
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
 	}
 }
 

@@ -129,7 +129,6 @@
 			"type": "number",
 			"label": "Manual Snapshot Width",
 			"min": 0,
-			"disabled": "!data.motionSnapshot",
 			"sm": 12,
 			"md": 2
 		},
@@ -137,7 +136,13 @@
 			"type": "number",
 			"label": "Manual Snapshot Height",
 			"min": 0,
-			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
+		},
+		"manualSnapshotRetention": {
+			"type": "number",
+			"label": "Manual Snapshot Retention (days)",
+			"min": 0,
 			"sm": 12,
 			"md": 2
 		},

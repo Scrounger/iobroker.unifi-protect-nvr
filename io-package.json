@@ -104,6 +104,7 @@
 		"motionThumbAnimatedSpeedUp": 10,
 		"manualSnapshotWidth": 1280,
 		"manualSnapshotHeight": 720,
+		"manualSnapshotRetention": 10,
 		"blacklistedStates": [
 			{
 				"id": "cameras.id"
