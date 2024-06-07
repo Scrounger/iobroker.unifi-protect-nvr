@@ -9,6 +9,7 @@
 const utils = require('@iobroker/adapter-core');
 
 const myDeviceTypes = require('./lib/devices');
+const myDeviceImages = require('./lib/deviceImages');
 const myHelper = require('./lib/helper');
 
 const fs = require('fs');
@@ -529,8 +530,15 @@ class UnifiProtectNvr extends utils.Adapter {
 					// create cam channel
 					this.log.debug(`${logPrefix} creating channel '${cam.id}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
 					await this.createChannelAsync('cameras', cam.id, {
-						name: this.ufp.getDeviceName(cam, cam.name)
+						name: this.ufp.getDeviceName(cam, cam.name),
+						icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
 					});
+				} else {
+					const obj = await this.getObjectAsync(`cameras.${cam.id}`);
+
+					if (obj && obj.common && !obj.common.icon && myDeviceImages[cam.marketName]) {
+						this.extendObject(`cameras.${cam.id}`, { common: { icon: myDeviceImages[cam.marketName] } });
+					}
 				}
 
 				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam, 'cameras');
