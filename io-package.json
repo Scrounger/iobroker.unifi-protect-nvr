@@ -102,7 +102,29 @@
 		"motionThumbAnimatedWidth": 480,
 		"motionThumbAnimatedHeight": 270,
 		"motionThumbAnimatedSpeedUp": 10,
-		"statesFilter": []
+		"statesFilter": [
+			{
+				"id": "cameras.id"
+			},
+			{
+				"id": "cameras.marketName"
+			},
+			{
+				"id": "cameras.lastSeen"
+			},
+			{
+				"id": "cameras.mac"
+			},
+			{
+				"id": "cameras.micVolume"
+			},
+			{
+				"id": "cameras.stats.storage.used"
+			},
+			{
+				"id": "cameras.recordingSettings.useNewMotionAlgorithm"
+			}
+		]
 	},
 	"objects": [],
 	"instanceObjects": [

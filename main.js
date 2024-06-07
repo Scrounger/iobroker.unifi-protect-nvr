@@ -571,7 +571,7 @@ class UnifiProtectNvr extends utils.Adapter {
 									common: {
 										name: deviceTypes[id].name ? deviceTypes[id].name : id,
 										type: deviceTypes[id].type,
-										read: true,
+										read: deviceTypes[id].read ? deviceTypes[id].read : true,
 										write: deviceTypes[id].write ? deviceTypes[id].write : false,
 										role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
 										unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
