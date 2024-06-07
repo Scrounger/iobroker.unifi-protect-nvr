@@ -137,6 +137,8 @@
 					"type": "autocompleteSendTo",
 					"title": "Choose which states should be excluded",
 					"attr": "id",
+					"sort": true,
+					"filter": true,
 					"noMultiEdit": true,
 					"jsonData": "{\"instanceID\": \"${globalData.instanceID}\",\"adapter\": \"${globalData.adapter}\"}",
 					"command": "filterList"

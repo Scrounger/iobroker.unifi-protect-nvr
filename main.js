@@ -55,7 +55,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			thumbnailAnimated: ''
 		};
 
-		this.configFilterList = [];
+		this.configFilterList = [];		// List for AutoComplete in adapter settings
+		this.statesFilterList = [];			// prepared List for filtering out states
 
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
@@ -73,6 +74,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.setDefaultImages();
 
+			await this.prepareStatesFilterList();
+
 			if (this.config.host, this.config.user, this.config.password) {
 				this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
 
@@ -83,18 +86,6 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.ufp.on('message', (event) => this.onProtectEvent(event));
 
 				await this.establishConnection(true);
-
-				// const files = await this.readDirAsync(this.namespace, '/opt/iobroker/iobroker-data/files');
-
-				// // const imageBuffer = Buffer.from(tmp.file);
-				// // const imageBase64 = imageBuffer.toString('base64');
-				// // const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
-
-				// this.log.warn(JSON.stringify(files));
-
-				await this.createFilterList(myDeviceTypes);
-
-				this.log.warn(JSON.stringify(this.filterList));
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
@@ -570,47 +561,56 @@ class UnifiProtectNvr extends utils.Adapter {
 							// if we have a custom state, use defined id
 							stateId = deviceTypes[id].id;
 						}
+						if (!this.statesFilterList.includes(`${filterComparisonId}.${id}`)) {
+							// not on blacklist
 
-						if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
-							this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
-							const obj = {
-								type: 'state',
-								common: {
-									name: deviceTypes[id].name ? deviceTypes[id].name : id,
-									type: deviceTypes[id].type,
-									read: true,
-									write: deviceTypes[id].write ? deviceTypes[id].write : false,
-									role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
-									unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
-								},
-								native: {}
-							};
+							if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
+								this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
+								const obj = {
+									type: 'state',
+									common: {
+										name: deviceTypes[id].name ? deviceTypes[id].name : id,
+										type: deviceTypes[id].type,
+										read: true,
+										write: deviceTypes[id].write ? deviceTypes[id].write : false,
+										role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
+										unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
+									},
+									native: {}
+								};
 
-							if (deviceTypes[id].states) {
-								obj.common.states = deviceTypes[id].states;
+								if (deviceTypes[id].states) {
+									obj.common.states = deviceTypes[id].states;
+								}
+
+								// @ts-ignore
+								await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
 							}
 
-							// @ts-ignore
-							await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
-						}
-						this.log.warn(`${filterComparisonId}.${id}`);
-						if (deviceTypes[id].write && deviceTypes[id].write === true) {
-							// state is writeable -> subscribe it
-							this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
-							await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
-						}
+							if (deviceTypes[id].write && deviceTypes[id].write === true) {
+								// state is writeable -> subscribe it
+								this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
+								await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
+							}
 
-						if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
-							// write current val to state
-							if (deviceTypes[id].convertVal) {
-								await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+							if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
+								// write current val to state
+								if (deviceTypes[id].convertVal) {
+									await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+								} else {
+									await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
+								}
 							} else {
-								await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
+								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+									// only report it if it's not a custom defined state
+									this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
+								}
 							}
 						} else {
-							if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
-								// only report it if it's not a custom defined state
-								this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
+							// is on blacklist
+							if (await this.objectExists(`${parent}.${channel}.${stateId}`)) {
+								this.log.info(`${logPrefix} deleting blacklisted state '${parent}.${channel}.${stateId}'`);
+								await this.delObjectAsync(`${parent}.${channel}.${stateId}`);
 							}
 						}
 					} else {
@@ -697,6 +697,20 @@ class UnifiProtectNvr extends utils.Adapter {
 					});
 				} else {
 					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async prepareStatesFilterList() {
+		const logPrefix = '[prepareFilterList]:';
+
+		try {
+			for (const key in this.config.statesFilter) {
+				if (this.config.statesFilter[key]) {
+					this.statesFilterList.push(this.config.statesFilter[key].id);
 				}
 			}
 		} catch (error) {
