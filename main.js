@@ -44,6 +44,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.aliveTimeout = null;
 		this.aliveTimestamp = new Date().getTime();
 
+		this.retentionTimeout = null;
+
 		this.connectionMaxRetries = 200;
 		this.connectionRetries = 0;
 
@@ -58,8 +60,12 @@ class UnifiProtectNvr extends utils.Adapter {
 			thumbnailAnimated: ''
 		};
 
+		this.storagePaths = {
+			snapshotCameras: '/snapshot/cameras/'
+		};
+
 		this.configFilterList = [];		// List for AutoComplete in adapter settings
-		this.blacklistedStates = [];			// prepared List for filtering out states
+		this.blacklistedStates = [];	// prepared List for filtering out states
 
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
@@ -95,6 +101,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
 
+			this.retentionManager();
+
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -108,6 +116,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			// Here you must clear all timeouts or intervals that may still be active
 			if (this.aliveTimeout) clearTimeout(this.aliveTimeout);
+			if (this.retentionTimeout) clearTimeout(this.retentionTimeout);
 			// clearTimeout(timeout2);
 			// ...
 			// clearInterval(interval1);
@@ -483,11 +492,11 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
-						const filename = `/cameras/${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format('YYYY_MM_DD_HH_mm_ss')}.png`;
+						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format('YYYY_MM_DD_HH_mm_ss')}.png`;
 
 						await this.writeFileAsync(this.namespace, filename, imageBuffer);
 
-						this.log.debug(`${logPrefix} snapshot successfully received (/${this.namespace}${filename})`);
+						this.log.info(`${logPrefix} snapshot successfully received (/${this.namespace}${filename})`);
 
 						await this.setStateExists(targetId, `/${this.namespace}${filename}`);
 					}
@@ -519,7 +528,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						await this.establishConnection();
 					} else {
 						this.log.error(`${logPrefix} Connection to the Unifi-Protect controller is down for more then ${this.connectionMaxRetries * this.aliveInterval}s, stopping the adapter.`);
-						this.stop();
+						this.stop({ reason: 'too many connection retries' });
 					}
 				} else {
 					this.log.silly(`${logPrefix} Connection to the Unifi-Protect controller is alive (last alive signal is ${diff}s old)`);
@@ -735,6 +744,60 @@ class UnifiProtectNvr extends utils.Adapter {
 				} else {
 					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
 				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async retentionManager() {
+		const logPrefix = '[retentionManager]:';
+
+		try {
+			this.log.debug(`${logPrefix} retention check starting...`);
+			if (this.config.manualSnapshotRetention > 0) {
+				let dirList = null;
+
+				try {
+					dirList = await this.readDirAsync(this.namespace, this.storagePaths.snapshotCameras);
+				} catch (ignore) {
+					// no dir's found -> ignore
+				}
+
+				if (dirList !== null) {
+					for (const dir of dirList) {
+						if (dir.isDir) {
+							let dirCams = null;
+
+							try {
+								dirCams = await this.readDirAsync(this.namespace, `${this.storagePaths.snapshotCameras}${dir.file}/`);
+							} catch (ignore) {
+								// no dir's found -> ignore
+							}
+
+							if (dirCams !== null) {
+								for (const file of dirCams) {
+									const diff = moment().diff(moment(file.createdAt), 'days');
+
+									if (diff >= this.config.manualSnapshotRetention) {
+										const fileName = `${this.storagePaths.snapshotCameras}${dir.file}/${file.file}`;
+										this.delFileAsync(this.namespace, fileName);
+										this.log.info(`${logPrefix} snapshot '${fileName}' deleted, because it's ${diff} days old`);
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (this.retentionTimeout) {
+					this.clearTimeout(this.retentionTimeout);
+					this.retentionTimeout = null;
+				}
+
+				this.retentionTimeout = this.setTimeout(() => {
+					this.retentionManager();
+				}, 60 * 60 * 1000);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);

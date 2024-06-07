@@ -141,7 +141,7 @@
 		},
 		"manualSnapshotRetention": {
 			"type": "number",
-			"label": "Manual Snapshot Retention (days)",
+			"label": "Manual Snapshot Retention (days, 0 = disabled)",
 			"min": 0,
 			"sm": 12,
 			"md": 2
