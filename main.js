@@ -150,7 +150,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						const camId = id.split('.')[3];
 
 						if (id.includes(myDeviceTypes.cameras.takeSnapshot.id)) {
-							this.getSnapshot(this.devices.cameras[camId], `cameras.${camId}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight);
+							this.getSnapshot(this.devices.cameras[camId], `cameras.${camId}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
 						} else {
 							// write settings
 							if (this.devices.cameras[camId]) {

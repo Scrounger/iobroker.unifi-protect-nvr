@@ -102,6 +102,8 @@
 		"motionThumbAnimatedWidth": 480,
 		"motionThumbAnimatedHeight": 270,
 		"motionThumbAnimatedSpeedUp": 10,
+		"manualSnapshotWidth": 1280,
+		"manualSnapshotHeight": 720,
 		"blacklistedStates": [
 			{
 				"id": "cameras.id"

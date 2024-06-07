@@ -27,7 +27,7 @@
 			"sm": 12,
 			"md": 2
 		},
-		"dividerMotion Events": {
+		"dividerMotionEvents": {
 			"newLine": true,
 			"type": "header",
 			"text": "motion events",
@@ -117,6 +117,35 @@
 			"disabled": "!data.motionThumbAnimated",
 			"sm": 12,
 			"md": 2
+		},
+		"dividerManualSnapshot": {
+			"newLine": true,
+			"type": "header",
+			"text": "Manual Snapshot",
+			"size": 2
+		},
+		"manualSnapshotWidth": {
+			"newLine": true,
+			"type": "number",
+			"label": "Manual Snapshot Width",
+			"min": 0,
+			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
+		},
+		"manualSnapshotHeight": {
+			"type": "number",
+			"label": "Manual Snapshot Height",
+			"min": 0,
+			"disabled": "!data.motionSnapshot",
+			"sm": 12,
+			"md": 2
+		},
+		"dividerMotionBlacklist": {
+			"newLine": true,
+			"type": "header",
+			"text": "Blacklist",
+			"size": 2
 		},
 		"blacklistedStates": {
 			"type": "table",
