@@ -147,12 +147,12 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (state && !state.from.includes(this.namespace)) {
 					// The state was changed
 					if (id.includes('cameras')) {
+						const camId = id.split('.')[3];
+
 						if (id.includes(myDeviceTypes.cameras.takeSnapshot.id)) {
-							this.log.warn('take a snapshot');
+							this.getSnapshot(this.devices.cameras[camId], `cameras.${camId}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight);
 						} else {
 							// write settings
-							const camId = id.split('.')[3];
-
 							if (this.devices.cameras[camId]) {
 								const objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
 								this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
@@ -461,7 +461,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {number} height
 	 * @param {any} eventId
 	 */
-	async getSnapshot(cam, targetId, width, height, eventId, base64Image = false) {
+	async getSnapshot(cam, targetId, width, height, eventId = undefined, base64Image = false) {
 		if (this.ufp && this.isConnected) {
 			const logPrefix = `[getSnapshot]: ${this.ufp.getDeviceName(cam)} - `;
 
@@ -476,6 +476,14 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.log.debug(`${logPrefix} snapshot successfully received (eventId: ${eventId})`);
 
 						await this.setStateExists(targetId, base64ImgString);
+					} else {
+						const filename = `/cameras/${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${new Date().getTime()}.png`;
+
+						await this.writeFileAsync(this.namespace, filename, imageBuffer);
+
+						this.log.debug(`${logPrefix} snapshot successfully received (/${this.namespace}${filename})`);
+
+						await this.setStateExists(targetId, `/${this.namespace}${filename}`);
 					}
 				}
 			} catch (error) {
@@ -689,7 +697,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				}
 			}
-			this.creat
+
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
