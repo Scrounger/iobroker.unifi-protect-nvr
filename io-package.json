@@ -72,6 +72,7 @@
 		"compact": true,
 		"connectionType": "local",
 		"dataSource": "push",
+		"messagebox": true,
 		"adminUI": {
 			"config": "json"
 		},
@@ -100,7 +101,8 @@
 		"motionThumbAnimated": false,
 		"motionThumbAnimatedWidth": 480,
 		"motionThumbAnimatedHeight": 270,
-		"motionThumbAnimatedSpeedUp": 10
+		"motionThumbAnimatedSpeedUp": 10,
+		"statesFilter": []
 	},
 	"objects": [],
 	"instanceObjects": [

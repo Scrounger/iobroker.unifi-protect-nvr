@@ -117,6 +117,31 @@
 			"disabled": "!data.motionThumbAnimated",
 			"sm": 12,
 			"md": 2
+		},
+		"statesFilter": {
+			"type": "table",
+			"sm": 12,
+			"md": 12,
+			"lg": 12,
+			"newLine": true,
+			"confirm": {
+				"condition": "!_alive",
+				"title": "Attention!",
+				"text": "This selection is only possible with a running instance!",
+				"ok": "Got it!",
+				"cancel": "cancel",
+				"type": "warning"
+			},
+			"items": [
+				{
+					"type": "autocompleteSendTo",
+					"title": "Choose which states should be excluded",
+					"attr": "id",
+					"noMultiEdit": true,
+					"jsonData": "{\"instanceID\": \"${globalData.instanceID}\",\"adapter\": \"${globalData.adapter}\"}",
+					"command": "filterList"
+				}
+			]
 		}
 	}
 }

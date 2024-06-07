@@ -55,10 +55,12 @@ class UnifiProtectNvr extends utils.Adapter {
 			thumbnailAnimated: ''
 		};
 
+		this.configFilterList = [];
+
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
 		// this.on('objectChange', this.onObjectChange.bind(this));
-		// this.on('message', this.onMessage.bind(this));
+		this.on('message', this.onMessage.bind(this));
 		this.on('unload', this.onUnload.bind(this));
 	}
 
@@ -89,6 +91,10 @@ class UnifiProtectNvr extends utils.Adapter {
 				// // const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
 
 				// this.log.warn(JSON.stringify(files));
+
+				await this.createFilterList(myDeviceTypes);
+
+				this.log.warn(JSON.stringify(this.filterList));
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
@@ -183,17 +189,19 @@ class UnifiProtectNvr extends utils.Adapter {
 	//  * Using this method requires "common.messagebox" property to be set to true in io-package.json
 	//  * @param {ioBroker.Message} obj
 	//  */
-	// onMessage(obj) {
-	// 	if (typeof obj === 'object' && obj.message) {
-	// 		if (obj.command === 'send') {
-	// 			// e.g. send email or pushover or whatever
-	// 			this.log.info('send command');
+	async onMessage(obj) {
+		// this.log.warn(JSON.stringify(obj.command));
+		if (typeof obj === 'object' && obj.message) {
+			if (obj.command === 'filterList') {
+				if (this.configFilterList.length === 0) {
+					await this.createConfigFilterList(myDeviceTypes);
+				}
 
-	// 			// Send response in callback if required
-	// 			if (obj.callback) this.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-	// 		}
-	// 	}
-	// }
+				// Send response in callback if required
+				if (obj.callback) this.sendTo(obj.from, obj.command, this.configFilterList, obj.callback);
+			}
+		}
+	}
 
 	async establishConnection(isAdapterStart = false) {
 		const logPrefix = '[establishConnection]:';
@@ -534,7 +542,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					});
 				}
 
-				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam);
+				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam, 'cameras');
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -547,7 +555,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
 	 * @param {object} objValues ufp bootstrap values of device
 	 */
-	async createGenericState(parent, channel, deviceTypes, objValues) {
+	async createGenericState(parent, channel, deviceTypes, objValues, filterComparisonId) {
 		const logPrefix = '[createGenericState]:';
 
 		try {
@@ -585,7 +593,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							// @ts-ignore
 							await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
 						}
-
+						this.log.warn(`${filterComparisonId}.${id}`);
 						if (deviceTypes[id].write && deviceTypes[id].write === true) {
 							// state is writeable -> subscribe it
 							this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
@@ -619,7 +627,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							});
 
 						}
-						await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id]);
+						await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
 					}
 				} catch (error) {
 					this.log.error(`${logPrefix} [id: ${id}] error: ${error}, stack: ${error.stack}`);
@@ -661,6 +669,34 @@ class UnifiProtectNvr extends utils.Adapter {
 					} else {
 						await this.updateStates(idDevice, idParentDevice, deviceTypes[key], payload[key], `${idPrefix}.${key}`);
 					}
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async createConfigFilterList(deviceTypes, idPrefix = '') {
+		const logPrefix = '[createFilterList]:';
+
+		try {
+			for (const key in deviceTypes) {
+
+				if (key && Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
+					// if we have a 'type' property, then it's a state
+					let stateId = key;
+
+					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'id')) {
+						// if we have a custom state, use defined id
+						stateId = deviceTypes[key].id;
+					}
+
+					this.configFilterList.push({
+						label: `${idPrefix}${stateId}`,
+						value: `${idPrefix}${key}`,
+					});
+				} else {
+					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
 				}
 			}
 		} catch (error) {
