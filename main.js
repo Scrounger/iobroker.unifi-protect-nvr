@@ -28,6 +28,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		super({
 			...options,
 			name: 'unifi-protect-nvr',
+			useFormatDate: true
 		});
 
 		this.isConnected = false;
@@ -80,7 +81,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[onReady]:';
 
 		try {
-			await this.getLanguage();
+			moment.locale(this.language);
 
 			this.setDefaultImages();
 
@@ -305,7 +306,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
 			} else if (event.header.modelKey === 'event') {
-				if (event.header.recordModel === 'camera') {
+				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
 					const cam = this.devices.cameras[event.header.recordId];
 					this.onCamMotionEvent(cam, event.header, event.payload);
 				}
@@ -922,26 +923,6 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 
 		return '';
-	}
-
-	async getLanguage() {
-		const logPrefix = '[getLanguage]:';
-
-		try {
-			const sysConfig = await this.getForeignObjectAsync('system.config');
-
-			if (sysConfig && sysConfig.common && sysConfig.common['language']) {
-				this.language = sysConfig.common['language'];
-			} else {
-				this.language = 'en';
-			}
-
-			moment.locale(this.language);
-
-			this.log.warn(`${logPrefix} system language is '${this.language}'`);
-		} catch (error) {
-			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
-		}
 	}
 }
 

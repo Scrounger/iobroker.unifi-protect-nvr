@@ -91,6 +91,7 @@
 		"host": "",
 		"user": "",
 		"password": "",
+		"motionEventsEnabled": true,
 		"motionSnapshot": false,
 		"motionSnapshotWidth": 1280,
 		"motionSnapshotHeight": 720,

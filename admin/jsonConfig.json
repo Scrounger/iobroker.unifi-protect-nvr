@@ -33,10 +33,18 @@
 			"text": "motion events",
 			"size": 2
 		},
+		"motionEventsEnabled": {
+			"type": "checkbox",
+			"label": "Motion Events enabled",
+			"newLine": true,
+			"sm": 12,
+			"md": 2
+		},
 		"motionSnapshot": {
 			"type": "checkbox",
 			"label": "Motion Snapshot",
 			"newLine": true,
+			"disabled": "!data.motionEvenst",
 			"sm": 12,
 			"md": 2
 		},
@@ -44,7 +52,7 @@
 			"type": "number",
 			"label": "Motion Snapshot Width",
 			"min": 0,
-			"disabled": "!data.motionSnapshot",
+			"disabled": "!data.motionEvenst || !data.motionSnapshot",
 			"sm": 12,
 			"md": 2
 		},
@@ -52,7 +60,7 @@
 			"type": "number",
 			"label": "Motion Snapshot Height",
 			"min": 0,
-			"disabled": "!data.motionSnapshot",
+			"disabled": "!data.motionEvenst || !data.motionSnapshot",
 			"sm": 12,
 			"md": 2
 		},
@@ -60,7 +68,7 @@
 			"type": "number",
 			"label": "Motion Snapshot Delay (-1 = auto)",
 			"min": -1,
-			"disabled": "!data.motionSnapshot",
+			"disabled": "!data.motionEvenst || !data.motionSnapshot",
 			"sm": 12,
 			"md": 2
 		},
@@ -68,6 +76,7 @@
 			"type": "checkbox",
 			"label": "Motion Thumbnail",
 			"newLine": true,
+			"disabled": "!data.motionEvenst",
 			"sm": 12,
 			"md": 2
 		},
@@ -75,7 +84,7 @@
 			"type": "number",
 			"label": "Motion Thumbnail Width",
 			"min": 0,
-			"disabled": "!data.motionThumb",
+			"disabled": "!data.motionEvenst || !data.motionThumb",
 			"sm": 12,
 			"md": 2
 		},
@@ -83,7 +92,7 @@
 			"type": "number",
 			"label": "Motion Thumbnail Height",
 			"min": 0,
-			"disabled": "!data.motionThumb",
+			"disabled": "!data.motionEvenst || !data.motionThumb",
 			"sm": 12,
 			"md": 2
 		},
@@ -91,6 +100,7 @@
 			"type": "checkbox",
 			"label": "Motion Animated Thumbnail",
 			"newLine": true,
+			"disabled": "!data.motionEvenst",
 			"sm": 12,
 			"md": 2
 		},
@@ -98,7 +108,7 @@
 			"type": "number",
 			"label": "Motion Animated Thumbnail Width",
 			"min": 0,
-			"disabled": "!data.motionThumbAnimated",
+			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
 			"sm": 12,
 			"md": 2
 		},
@@ -106,7 +116,7 @@
 			"type": "number",
 			"label": "Motion Animated Thumbnail Height",
 			"min": 0,
-			"disabled": "!data.motionThumbAnimated",
+			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
 			"sm": 12,
 			"md": 2
 		},
@@ -114,7 +124,7 @@
 			"type": "number",
 			"label": "Motion Animated Thumbnail SpeedUp",
 			"min": 0,
-			"disabled": "!data.motionThumbAnimated",
+			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
 			"sm": 12,
 			"md": 2
 		},
