@@ -169,7 +169,16 @@ class UnifiProtectNvr extends utils.Adapter {
 						} else {
 							// write settings
 							if (this.devices.cameras[camId]) {
-								const objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
+								const writeValFunction = myHelper.getObjectByString(`${id.split(`${camId}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
+
+								let objWrite = null;
+
+								if (writeValFunction) {
+									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), writeValFunction(state.val));
+								} else {
+									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
+								}
+
 								this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
 
 								this.log.info(`${logPrefix} cam state '${id}' changed to '${state.val}'`);
@@ -191,6 +200,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
+
+
 
 	// If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
 	// /**

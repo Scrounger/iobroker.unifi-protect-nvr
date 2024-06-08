@@ -127,6 +127,9 @@
 			},
 			{
 				"id": "cameras.recordingSettings.useNewMotionAlgorithm"
+			},
+			{
+				"id": "cameras.smartDetectSettings.autoTrackingObjectTypes"
 			}
 		]
 	},
