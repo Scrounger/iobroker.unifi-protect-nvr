@@ -43,7 +43,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		this.aliveInterval = 15;
 		this.aliveTimeout = null;
-		this.aliveTimestamp = new Date().getTime();
+		this.aliveTimestamp = moment().valueOf();
 
 		this.retentionTimeout = null;
 
@@ -299,7 +299,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[onProtectEvent]:';
 
 		try {
-			this.aliveTimestamp = new Date().getTime();
+			this.aliveTimestamp = moment().valueOf();
 
 			if (event.header.modelKey === 'camera') {
 				const camId = event.header.id;
@@ -515,7 +515,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
-				const diff = Math.round((new Date().getTime() - this.aliveTimestamp) / 1000);
+				const diff = Math.round((moment().valueOf() - this.aliveTimestamp) / 1000);
 
 				if (diff >= this.aliveInterval) {
 					this.log.warn(`${logPrefix} No connection to the Unifi-Protect controller -> restart connection (retries: ${this.connectionRetries})`);
