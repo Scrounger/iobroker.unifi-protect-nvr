@@ -123,25 +123,13 @@
 				"id": "cameras.micVolume"
 			},
 			{
-				"id": "cameras.stats.storage.used"
+				"id": "cameras.stats"
 			},
 			{
-				"id": "cameras.recordingSettings.useNewMotionAlgorithm"
+				"id": "cameras.eventStats"
 			},
 			{
-				"id": "cameras.smartDetectSettings.autoTrackingObjectTypes"
-			},
-			{
-				"id": "cameras.smartDetectSettings.motionZones"
-			},
-			{
-				"id": "cameras.smartDetectSettings.smartDetectZones"
-			},
-			{
-				"id": "cameras.smartDetectSettings.smartDetectLines"
-			},
-			{
-				"id": "cameras.smartDetectSettings.privacyZones"
+				"id": "cameras.smartDetectSettings"
 			}
 		]
 	},

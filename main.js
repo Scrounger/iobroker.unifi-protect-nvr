@@ -68,6 +68,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.fileNameFormat = 'YYYY_MM_DD_HH_mm_ss';
 
 		this.configFilterList = [];		// List for AutoComplete in adapter settings
+		this.configFilterListIgnore = ['cameras'];
 		this.blacklistedStates = [];	// prepared List for filtering out states
 
 		this.on('ready', this.onReady.bind(this));
@@ -674,26 +675,33 @@ class UnifiProtectNvr extends utils.Adapter {
 							}
 						}
 					} else {
-						// it's a channel, create it and iterate again over the properties
-						if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
-							this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
+						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
+							// it's a channel, create it and iterate again over the properties
+							if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
+								this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
 
-							await this.setObjectAsync(`${parent}.${channel}.${id}`, {
-								type: 'channel',
-								common: {
-									name: id
-								},
-								native: {}
-							});
+								await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+									type: 'channel',
+									common: {
+										name: id
+									},
+									native: {}
+								});
 
-						}
+							}
 
-						if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
-							for (let i = 0; i <= objValues[id].length - 1; i++) {
-								await this.createGenericState(parent, `${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
+							if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+								for (let i = 0; i <= objValues[id].length - 1; i++) {
+									await this.createGenericState(parent, `${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
+								}
+							} else {
+								await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
 							}
 						} else {
-							await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
+							if (await this.objectExists(`${parent}.${channel}.${id}`)) {
+								this.log.info(`${logPrefix} deleting blacklisted channel '${parent}.${channel}.${id}'`);
+								await this.delObjectAsync(`${parent}.${channel}.${id}`, { recursive: true });
+							}
 						}
 					}
 				} catch (error) {
@@ -739,38 +747,6 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			}
 
-		} catch (error) {
-			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
-		}
-	}
-
-	/** create list of all states for adapter config (sendTo from frontend)
-	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
-	 * @param {string} idPrefix
-	 */
-	async createConfigFilterList(deviceTypes, idPrefix = '') {
-		const logPrefix = '[createFilterList]:';
-
-		try {
-			for (const key in deviceTypes) {
-
-				if (key && Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
-					// if we have a 'type' property, then it's a state
-					let stateId = key;
-
-					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'id')) {
-						// if we have a custom state, use defined id
-						stateId = deviceTypes[key].id;
-					}
-
-					this.configFilterList.push({
-						label: `${idPrefix}${stateId}`,
-						value: `${idPrefix}${key}`,
-					});
-				} else {
-					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
-				}
-			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -824,6 +800,45 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.retentionTimeout = this.setTimeout(() => {
 					this.retentionManager();
 				}, 60 * 60 * 1000);
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	/** create list of all states for adapter config (sendTo from frontend)
+	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
+	 * @param {string} idPrefix
+	 */
+	async createConfigFilterList(deviceTypes, idPrefix = '') {
+		const logPrefix = '[createFilterList]:';
+
+		try {
+			for (const key in deviceTypes) {
+
+				if (key && Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
+					// if we have a 'type' property, then it's a state
+					let stateId = key;
+
+					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'id')) {
+						// if we have a custom state, use defined id
+						stateId = deviceTypes[key].id;
+					}
+
+					this.configFilterList.push({
+						label: `[State]\t\t ${idPrefix}${stateId}`,
+						value: `${idPrefix}${key}`,
+					});
+				} else {
+					if (!this.configFilterListIgnore.includes(key)) {
+						this.configFilterList.push({
+							label: `[Channel]\t ${idPrefix}${key}`,
+							value: `${idPrefix}${key}`,
+						});
+					}
+
+					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
+				}
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
