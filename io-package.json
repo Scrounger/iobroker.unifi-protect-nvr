@@ -130,6 +130,18 @@
 			},
 			{
 				"id": "cameras.smartDetectSettings.autoTrackingObjectTypes"
+			},
+			{
+				"id": "cameras.smartDetectSettings.motionZones"
+			},
+			{
+				"id": "cameras.smartDetectSettings.smartDetectZones"
+			},
+			{
+				"id": "cameras.smartDetectSettings.smartDetectLines"
+			},
+			{
+				"id": "cameras.smartDetectSettings.privacyZones"
 			}
 		]
 	},
