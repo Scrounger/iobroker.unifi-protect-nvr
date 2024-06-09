@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.1",
     "news": {
+      "1.0.0-alpha.1": {
+        "en": "testing fix",
+        "de": "prüfstand",
+        "ru": "исправление",
+        "pt": "correção de teste",
+        "nl": "testfix",
+        "fr": "d'essai",
+        "it": "correzione di test",
+        "es": "prueba",
+        "pl": "fix testowy",
+        "uk": "фіксатор тестування",
+        "zh-cn": "测试修正"
+      },
       "1.0.0-alpha.0": {
         "en": "initial release",
         "de": "erstausstrahlung",
@@ -67,7 +80,6 @@
       "api",
       "camera"
     ],
-    "license": "MIT",
     "licenseInformation": {
       "type": "free",
       "license": "MIT"
