@@ -731,7 +731,6 @@ class UnifiProtectNvr extends utils.Adapter {
 						const val = deviceTypes[key].convertVal ? deviceTypes[key].convertVal(payload[key]) : payload[key];
 
 						if (this.log.level === 'debug') {
-							// ToDo: change to silly level
 							const oldState = await this.getStateAsync(id);
 
 							if (oldState && oldState.val !== val) {

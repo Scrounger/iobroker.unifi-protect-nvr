@@ -32,17 +32,17 @@
 			"zh-cn": "Unifi 保护 NVR"
 		},
 		"desc": {
-			"en": "Unifi Protect Adapter for ioBroker based on the unifi-protect library from hjdhjd",
-			"de": "Unifi Protect Adapter für ioBroker auf Basis der unifi-protect-Bibliothek von hjdhjd",
-			"ru": "Unifi Защитить адаптер для ioBroker на основе unifi-защитной библиотеки от hjdhjd",
-			"pt": "Unifi Protect Adapter para ioBroker baseado na biblioteca de proteção unifi de hjdhjd",
-			"nl": "Unifi Protect Adapter voor ioBroker gebaseerd op de unifi-protect bibliotheek van hjdhjd",
-			"fr": "Adaptateur Unifi Protect pour ioBroker basé sur la bibliothèque unifi-protect de hjdhjd",
-			"it": "Adattatore di protezione Unifi per ioBroker basato sulla libreria unifi-protect da hjdhjd",
-			"es": "Adaptador de protección unifi para ioBroker basado en la biblioteca de protección unifi de hjd",
-			"pl": "Unifi Protect Adapter for jOBroker na podstawie biblioteki unifi- protect z hjdhjd",
+			"en": "Unifi Protect Adapter based on the unifi-protect library from hjdhjd",
+			"de": "Unifi Protect Adapter basierend auf der unifi-protect Bibliothek von hjdhjd",
+			"ru": "Unifi Protect Adapter, основанный на унифи-защитной библиотеке от hjdhjd",
+			"pt": "Unifi Protect Adapter baseado na biblioteca de proteção unifi de hjdhjd",
+			"nl": "Unifi Protect Adapter gebaseerd op de unifi-protect bibliotheek van hjdhjd",
+			"fr": "Unifi Protect Adapter basé sur la bibliothèque unifi-protect de hjdhjd",
+			"it": "Adattatore di protezione Unifi basato sulla libreria unifi-protect da hjdhjd",
+			"es": "Adaptador de protección unifi basado en la biblioteca de protección unifi de hjd",
+			"pl": "Unifi Protect Adapter na bazie biblioteki unifi- protect z hjdhjd",
 			"uk": "tbd",
-			"zh-cn": "基于 unifi 保护库的 ioBroker 保护适配器"
+			"zh-cn": "基于 unifi 保护库的 Unifi 保护适配器"
 		},
 		"authors": [
 			"Scrounger <scrounger@gmx.net>"
