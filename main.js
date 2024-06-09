@@ -65,6 +65,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			snapshotCameras: '/snapshot/cameras/'
 		};
 
+		this.fileNameFormat = 'YYYY_MM_DD_HH_mm_ss';
+
 		this.configFilterList = [];		// List for AutoComplete in adapter settings
 		this.blacklistedStates = [];	// prepared List for filtering out states
 
@@ -504,7 +506,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
-						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format('YYYY_MM_DD_HH_mm_ss')}.png`;
+						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format(this.fileNameFormat)}.png`;
 
 						await this.writeFileAsync(this.namespace, filename, imageBuffer);
 
@@ -606,7 +608,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			// {@link myDevices}
 			for (const id in deviceTypes) {
 				try {
-					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type')) {
+					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 						// if we have a 'type' property, then it's a state
 						let stateId = id;
 
@@ -680,7 +682,14 @@ class UnifiProtectNvr extends utils.Adapter {
 							});
 
 						}
-						await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
+
+						if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+							for (let i = 0; i <= objValues[id].length - 1; i++) {
+								await this.createGenericState(parent, `${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
+							}
+						} else {
+							await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
+						}
 					}
 				} catch (error) {
 					this.log.error(`${logPrefix} [id: ${id}] error: ${error}, stack: ${error.stack}`);
@@ -789,7 +798,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							if (dirCams !== null) {
 								for (const file of dirCams) {
-									const diff = moment().diff(moment(file.createdAt), 'days');
+									const diff = moment().diff(moment(file.file, this.fileNameFormat), 'days');
 
 									if (diff >= this.config.manualSnapshotRetention) {
 										const fileName = `${this.storagePaths.snapshotCameras}${dir.file}/${file.file}`;
