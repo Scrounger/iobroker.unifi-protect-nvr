@@ -181,9 +181,14 @@ class UnifiProtectNvr extends utils.Adapter {
 									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
 								}
 
-								this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
+								const response = await this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
 
-								this.log.info(`${logPrefix} cam state '${id}' changed to '${state.val}'`);
+								if (response !== null) {
+									this.log.debug(`${logPrefix} cam state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
+									this.log.info(`${logPrefix} cam state '${id}' changed to '${state.val}'`);
+								} else {
+									this.log.warn(`${logPrefix} changing cam state '${id}' to '${state.val}' not successful!`);
+								}
 							} else {
 								this.log.error(`${logPrefix} cam (id ${camId}) not exists in devices list`);
 							}
