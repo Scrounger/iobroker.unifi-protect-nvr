@@ -1,188 +1,201 @@
 {
-	"common": {
-		"name": "unifi-protect-nvr",
-		"version": "0.0.1",
-		"news": {
-			"0.0.1": {
-				"en": "initial release",
-				"de": "Erstveröffentlichung",
-				"ru": "Начальная версия",
-				"pt": "lançamento inicial",
-				"nl": "Eerste uitgave",
-				"fr": "Première version",
-				"it": "Versione iniziale",
-				"es": "Versión inicial",
-				"pl": "Pierwsze wydanie",
-				"uk": "Початкова версія",
-				"zh-cn": "首次出版"
-			}
-		},
-		"title": "Unifi Protect NVR",
-		"titleLang": {
-			"en": "Unifi Protect NVR",
-			"de": "Unifi Protect NVR",
-			"ru": "Unifi Protect NVR",
-			"pt": "Unifi Proteger NVR",
-			"nl": "Unifi Protect NVR",
-			"fr": "Unifi Protéger NVR",
-			"it": "Unifi Proteggi NVR",
-			"es": "Unifi protege NVR",
-			"pl": "Unifi Protect NVR",
-			"uk": "Unifi Protect NVR",
-			"zh-cn": "Unifi 保护 NVR"
-		},
-		"desc": {
-			"en": "Unifi Protect Adapter based on the unifi-protect library from hjdhjd",
-			"de": "Unifi Protect Adapter basierend auf der unifi-protect Bibliothek von hjdhjd",
-			"ru": "Unifi Protect Adapter, основанный на унифи-защитной библиотеке от hjdhjd",
-			"pt": "Unifi Protect Adapter baseado na biblioteca de proteção unifi de hjdhjd",
-			"nl": "Unifi Protect Adapter gebaseerd op de unifi-protect bibliotheek van hjdhjd",
-			"fr": "Unifi Protect Adapter basé sur la bibliothèque unifi-protect de hjdhjd",
-			"it": "Adattatore di protezione Unifi basato sulla libreria unifi-protect da hjdhjd",
-			"es": "Adaptador de protección unifi basado en la biblioteca de protección unifi de hjd",
-			"pl": "Unifi Protect Adapter na bazie biblioteki unifi- protect z hjdhjd",
-			"uk": "tbd",
-			"zh-cn": "基于 unifi 保护库的 Unifi 保护适配器"
-		},
-		"authors": [
-			"Scrounger <scrounger@gmx.net>"
-		],
-		"keywords": [
-			"unifi",
-			"protect",
-			"nvr",
-			"api",
-			"camera"
-		],
-		"license": "MIT",
-		"licenseInformation": {
-			"type": "free",
-			"license": "MIT"
-		},
-		"platform": "Javascript/Node.js",
-		"main": "main.js",
-		"icon": "unifi-protect-nvr.svg",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/Scrounger/ioBroker.unifi-protect-nvr/main/admin/unifi-protect-nvr.svg",
-		"readme": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr/blob/main/README.md",
-		"loglevel": "info",
-		"tier": 3,
-		"mode": "daemon",
-		"type": "iot-systems",
-		"compact": true,
-		"connectionType": "local",
-		"dataSource": "push",
-		"messagebox": true,
-		"adminUI": {
-			"config": "json"
-		},
-		"dependencies": [
-			{
-				"js-controller": ">=3.3.22"
-			}
-		],
-		"globalDependencies": [
-			{
-				"admin": ">=5.1.13"
-			}
-		]
-	},
-	"native": {
-		"host": "",
-		"user": "",
-		"password": "",
-		"motionEventsEnabled": true,
-		"motionSnapshot": false,
-		"motionSnapshotWidth": 1280,
-		"motionSnapshotHeight": 720,
-		"motionSnapshotDelay": 0,
-		"motionThumb": false,
-		"motionThumbWidth": 360,
-		"motionThumbHeight": 360,
-		"motionThumbAnimated": false,
-		"motionThumbAnimatedWidth": 480,
-		"motionThumbAnimatedHeight": 270,
-		"motionThumbAnimatedSpeedUp": 10,
-		"manualSnapshotWidth": 1280,
-		"manualSnapshotHeight": 720,
-		"manualSnapshotRetention": 10,
-		"blacklistedStates": [
-			{
-				"id": "cameras.id"
-			},
-			{
-				"id": "cameras.marketName"
-			},
-			{
-				"id": "cameras.lastSeen"
-			},
-			{
-				"id": "cameras.mac"
-			},
-			{
-				"id": "cameras.micVolume"
-			},
-			{
-				"id": "cameras.stats"
-			},
-			{
-				"id": "cameras.eventStats"
-			},
-			{
-				"id": "cameras.smartDetectSettings"
-			}
-		]
-	},
-	"objects": [],
-	"instanceObjects": [
-		{
-			"_id": "",
-			"type": "meta",
-			"common": {
-				"name": {
-					"en": "File storage",
-					"de": "Dateispeicher",
-					"ru": "Хранение файлов",
-					"pt": "Armazenamento de arquivos",
-					"nl": "Veldopslag",
-					"fr": "Stockage de fichiers",
-					"it": "Archiviazione file",
-					"es": "Almacenamiento de archivos",
-					"pl": "Storage room",
-					"uk": "Зберігання файлів",
-					"zh-cn": "储存"
-				},
-				"type": "meta.user"
-			},
-			"native": {}
-		},
-		{
-			"_id": "info",
-			"type": "channel",
-			"common": {
-				"name": "Information"
-			},
-			"native": {}
-		},
-		{
-			"_id": "info.connection",
-			"type": "state",
-			"common": {
-				"role": "indicator.connected",
-				"name": "If master connected",
-				"type": "boolean",
-				"read": true,
-				"write": false,
-				"def": false
-			},
-			"native": {}
-		},
-		{
-			"_id": "cameras",
-			"type": "device",
-			"common": {
-				"name": "Cameras"
-			}
-		}
-	]
+  "common": {
+    "name": "unifi-protect-nvr",
+    "version": "1.0.0-alpha.0",
+    "news": {
+      "1.0.0-alpha.0": {
+        "en": "initial release",
+        "de": "erstausstrahlung",
+        "ru": "первоначальный выпуск",
+        "pt": "lançamento inicial",
+        "nl": "eerste release",
+        "fr": "libération initiale",
+        "it": "rilascio iniziale",
+        "es": "liberación inicial",
+        "pl": "początkowe zwolnienie",
+        "uk": "початковий реліз",
+        "zh-cn": "初步释放"
+      },
+      "0.0.1": {
+        "en": "initial release",
+        "de": "Erstveröffentlichung",
+        "ru": "Начальная версия",
+        "pt": "lançamento inicial",
+        "nl": "Eerste uitgave",
+        "fr": "Première version",
+        "it": "Versione iniziale",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "uk": "Початкова версія",
+        "zh-cn": "首次出版"
+      }
+    },
+    "title": "Unifi Protect NVR",
+    "titleLang": {
+      "en": "Unifi Protect NVR",
+      "de": "Unifi Protect NVR",
+      "ru": "Unifi Protect NVR",
+      "pt": "Unifi Proteger NVR",
+      "nl": "Unifi Protect NVR",
+      "fr": "Unifi Protéger NVR",
+      "it": "Unifi Proteggi NVR",
+      "es": "Unifi protege NVR",
+      "pl": "Unifi Protect NVR",
+      "uk": "Unifi Protect NVR",
+      "zh-cn": "Unifi 保护 NVR"
+    },
+    "desc": {
+      "en": "Unifi Protect Adapter based on the unifi-protect library from hjdhjd",
+      "de": "Unifi Protect Adapter basierend auf der unifi-protect Bibliothek von hjdhjd",
+      "ru": "Unifi Protect Adapter, основанный на унифи-защитной библиотеке от hjdhjd",
+      "pt": "Unifi Protect Adapter baseado na biblioteca de proteção unifi de hjdhjd",
+      "nl": "Unifi Protect Adapter gebaseerd op de unifi-protect bibliotheek van hjdhjd",
+      "fr": "Unifi Protect Adapter basé sur la bibliothèque unifi-protect de hjdhjd",
+      "it": "Adattatore di protezione Unifi basato sulla libreria unifi-protect da hjdhjd",
+      "es": "Adaptador de protección unifi basado en la biblioteca de protección unifi de hjd",
+      "pl": "Unifi Protect Adapter na bazie biblioteki unifi- protect z hjdhjd",
+      "uk": "tbd",
+      "zh-cn": "基于 unifi 保护库的 Unifi 保护适配器"
+    },
+    "authors": [
+      "Scrounger <scrounger@gmx.net>"
+    ],
+    "keywords": [
+      "unifi",
+      "protect",
+      "nvr",
+      "api",
+      "camera"
+    ],
+    "license": "MIT",
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "unifi-protect-nvr.svg",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/Scrounger/ioBroker.unifi-protect-nvr/main/admin/unifi-protect-nvr.svg",
+    "readme": "https://github.com/Scrounger/ioBroker.unifi-protect-nvr/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "iot-systems",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "push",
+    "messagebox": true,
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=3.3.22"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=5.1.13"
+      }
+    ]
+  },
+  "native": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "motionEventsEnabled": true,
+    "motionSnapshot": false,
+    "motionSnapshotWidth": 1280,
+    "motionSnapshotHeight": 720,
+    "motionSnapshotDelay": 0,
+    "motionThumb": false,
+    "motionThumbWidth": 360,
+    "motionThumbHeight": 360,
+    "motionThumbAnimated": false,
+    "motionThumbAnimatedWidth": 480,
+    "motionThumbAnimatedHeight": 270,
+    "motionThumbAnimatedSpeedUp": 10,
+    "manualSnapshotWidth": 1280,
+    "manualSnapshotHeight": 720,
+    "manualSnapshotRetention": 10,
+    "blacklistedStates": [
+      {
+        "id": "cameras.id"
+      },
+      {
+        "id": "cameras.marketName"
+      },
+      {
+        "id": "cameras.lastSeen"
+      },
+      {
+        "id": "cameras.mac"
+      },
+      {
+        "id": "cameras.micVolume"
+      },
+      {
+        "id": "cameras.stats"
+      },
+      {
+        "id": "cameras.eventStats"
+      },
+      {
+        "id": "cameras.smartDetectSettings"
+      }
+    ]
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "",
+      "type": "meta",
+      "common": {
+        "name": {
+          "en": "File storage",
+          "de": "Dateispeicher",
+          "ru": "Хранение файлов",
+          "pt": "Armazenamento de arquivos",
+          "nl": "Veldopslag",
+          "fr": "Stockage de fichiers",
+          "it": "Archiviazione file",
+          "es": "Almacenamiento de archivos",
+          "pl": "Storage room",
+          "uk": "Зберігання файлів",
+          "zh-cn": "储存"
+        },
+        "type": "meta.user"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "If master connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    },
+    {
+      "_id": "cameras",
+      "type": "device",
+      "common": {
+        "name": "Cameras"
+      }
+    }
+  ]
 }
