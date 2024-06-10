@@ -347,7 +347,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			// motion events consist multiple events
 			if (this.ufp) {
 				// ToDo: log level silly
-				this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
+				// this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
 					const camId = `cameras.${cam.id}`;
