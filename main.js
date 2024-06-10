@@ -185,10 +185,10 @@ class UnifiProtectNvr extends utils.Adapter {
 								const response = await this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
 
 								if (response !== null) {
-									this.log.debug(`${logPrefix} cam state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
-									this.log.info(`${logPrefix} cam state '${id}' changed to '${state.val}'`);
+									this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
+									this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed to '${state.val}'`);
 								} else {
-									this.log.warn(`${logPrefix} changing cam state '${id}' to '${state.val}' not successful!`);
+									this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - changing state '${id}' to '${state.val}' not successful!`);
 								}
 							} else {
 								this.log.error(`${logPrefix} cam (id ${camId}) not exists in devices list`);
@@ -347,7 +347,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			// motion events consist multiple events
 			if (this.ufp) {
 				// ToDo: log level silly
-				// this.log.warn(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
+				this.log.debug(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
 					const camId = `cameras.${cam.id}`;
