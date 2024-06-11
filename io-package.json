@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0-alpha.1",
+    "version": "1.0.0-alpha.2",
     "news": {
+      "1.0.0-alpha.2": {
+        "en": "bug fixes",
+        "de": "fehlerbehebungen",
+        "ru": "исправления ошибок",
+        "pt": "correções de bugs",
+        "nl": "foutherstel",
+        "fr": "corrections des bogues",
+        "it": "correzioni di bug",
+        "es": "bug fixes",
+        "pl": "poprawki błędów",
+        "uk": "виправлення помилок",
+        "zh-cn": "错误修正"
+      },
       "1.0.0-alpha.1": {
         "en": "testing fix",
         "de": "prüfstand",
