@@ -27,6 +27,13 @@
 			"sm": 12,
 			"md": 2
 		},
+		"stateChangeRetryDelay": {
+			"type": "number",
+			"label": "State Change Retry Delay [s]",
+			"min": 0,
+			"sm": 12,
+			"md": 2
+		},
 		"dividerMotionEvents": {
 			"newLine": true,
 			"type": "header",

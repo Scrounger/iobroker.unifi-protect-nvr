@@ -195,13 +195,13 @@ class UnifiProtectNvr extends utils.Adapter {
 									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
 								}
 
-								const response = await this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
+								const success = await this.onStateChangedUfp(camId, id, state, objWrite);
 
-								if (response !== null) {
-									this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
-									this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed to '${state.val}'`);
-								} else {
-									this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - changing state '${id}' to '${state.val}' not successful!`);
+								if (!success && this.config.stateChangeRetryDelay > 0) {
+									const that = this;
+									setTimeout(async function () {
+										await that.onStateChangedUfp(camId, id, state, objWrite, true);
+									}, this.config.stateChangeRetryDelay * 1000);
 								}
 							} else {
 								this.log.error(`${logPrefix} cam (id ${camId}) not exists in devices list`);
@@ -222,7 +222,32 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** Send state changed to nvr using ufp
+	 * @param {string} camId
+	 * @param {string} id
+	 * @param {ioBroker.State} state
+	 * @param {object} objWrite
+	 */
+	async onStateChangedUfp(camId, id, state, objWrite, secondRun = false) {
+		const logPrefix = '[onStateChangedUfp]:';
+		try {
+			if (this.ufp) {
+				const response = await this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
+				if (response !== null) {
+					this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
+					this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed to '${state.val}'${secondRun ? ' (2nd try)' : ''}`);
 
+					return true;
+				} else {
+					this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - changing state${secondRun ? ' second time' : ''} '${id}' to '${state.val}' not successful!`);
+				}
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+
+		return false;
+	}
 
 	// If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
 	// /**

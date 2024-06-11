@@ -129,6 +129,7 @@
     "host": "",
     "user": "",
     "password": "",
+    "stateChangeRetryDelay": 15,
     "motionEventsEnabled": true,
     "motionSnapshot": false,
     "motionSnapshotWidth": 1280,
