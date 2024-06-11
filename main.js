@@ -333,12 +333,14 @@ class UnifiProtectNvr extends utils.Adapter {
 			if (event.header.modelKey === 'camera') {
 				const camId = event.header.id;
 
-				await this.updateStates(camId, 'cameras', myDeviceTypes.cameras, event.payload);
+				await this.updateStates(camId, 'cameras', this.devices.cameras[camId], myDeviceTypes.cameras, event.payload);
 			} else if (event.header.modelKey === 'event') {
 				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
 					const cam = this.devices.cameras[event.header.recordId];
 					this.onCamMotionEvent(cam, event.header, event.payload);
 				}
+			} else if (event.header.modelKey === 'nvr') {
+				await this.updateStates('nvr', undefined, this.devices.nvr, myDeviceTypes.nvr, event.payload);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -766,28 +768,28 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
 	 * @param {object} payload data from event
 	 */
-	async updateStates(idDevice, idParentDevice, deviceTypes, payload, idPrefix = '') {
+	async updateStates(idDevice, idParentDevice, device, deviceTypes, payload, idPrefix = '') {
 		const logPrefix = '[updateStates]:';
 
 		try {
 			for (const key in payload) {
 				if (deviceTypes[key]) {
 					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
-						const id = `${idParentDevice}.${idDevice}${idPrefix}.${key}`;
+						const id = `${idParentDevice ? `${idParentDevice}.` : ''}${idDevice}${idPrefix}.${key}`;
 						const val = deviceTypes[key].convertVal ? deviceTypes[key].convertVal(payload[key]) : payload[key];
 
-						if (this.log.level === 'debug') {
+						if (this.log.level === 'silly') {
 							const oldState = await this.getStateAsync(id);
 
 							if (oldState && oldState.val !== val) {
-								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(this.devices.cameras[idDevice])} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
+								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(device)} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
 							}
 						}
 
 						if (await this.objectExists(id)) // check, as id may be on blacklist
 							await this.setStateChangedAsync(id, val, true);
 					} else {
-						await this.updateStates(idDevice, idParentDevice, deviceTypes[key], payload[key], `${idPrefix}.${key}`);
+						await this.updateStates(idDevice, idParentDevice, device, deviceTypes[key], payload[key], `${idPrefix}.${key}`);
 					}
 				}
 			}
