@@ -125,6 +125,12 @@
       }
     ]
   },
+  "encryptedNative": [
+    "password"
+  ],
+  "protectedNative": [
+    "password"
+  ],
   "native": {
     "host": "",
     "user": "",

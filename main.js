@@ -647,7 +647,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`nvr`);
 
 					if (obj && obj.common && !obj.common.icon && myDeviceImages[nvr.marketName]) {
-						this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
+						await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
 					}
 				}
 
@@ -677,7 +677,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`cameras.${cam.id}`);
 
 					if (obj && obj.common && !obj.common.icon && myDeviceImages[cam.marketName]) {
-						this.extendObject(`cameras.${cam.id}`, { common: { icon: myDeviceImages[cam.marketName] } });
+						await this.extendObject(`cameras.${cam.id}`, { common: { icon: myDeviceImages[cam.marketName] } });
 					}
 				}
 
