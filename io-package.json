@@ -168,7 +168,7 @@
         "id": "cameras.eventStats"
       },
       {
-        "id": "cameras.smartDetectSettings"
+        "id": "cameras.osdSettings"
       }
     ]
   },
