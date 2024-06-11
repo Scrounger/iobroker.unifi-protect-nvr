@@ -34,6 +34,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.isConnected = false;
 		this.ufp = undefined;
 		this.devices = {
+			nvr: {},
 			cameras: {}
 		};
 
@@ -291,6 +292,15 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			if (this.ufp && this.ufp.bootstrap) {
 				this.log.silly(`bootstrap: ${JSON.stringify(this.ufp.bootstrap)}`);
+
+				if (this.ufp.bootstrap.nvr) {
+					this.log.info(`${logPrefix}: Discovered ${this.ufp.bootstrap.nvr.modelKey}: ${this.ufp.getDeviceName(this.ufp.bootstrap.nvr, this.ufp.bootstrap.nvr.name)} (IP: ${this.ufp.bootstrap.nvr.host}, mac: ${this.ufp.bootstrap.nvr.mac}, id: ${this.ufp.bootstrap.nvr.id})`);
+					this.devices.nvr = this.ufp.bootstrap.nvr;
+
+					if (isAdapterStart) {
+						await this.createNvrStates(this.ufp.bootstrap.nvr);
+					}
+				}
 
 				// Add Cameras to List
 				if (this.ufp.bootstrap.cameras) {
@@ -571,6 +581,40 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+
+	/** Create nvr states
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectNvrConfigInterface} nvr
+	 */
+	async createNvrStates(nvr) {
+		const logPrefix = '[createNvrStates]:';
+
+		try {
+			if (this.ufp) {
+				if (!await this.objectExists(`nvr`)) {
+					this.log.debug(`${logPrefix} creating channel '${nvr.id}' for nvr '${this.ufp.getDeviceName(nvr, nvr.name)}'`);
+					await this.setObjectAsync('nvr', {
+						type: 'channel',
+						common: {
+							name: this.ufp.getDeviceName(nvr, nvr.name),
+							icon: myDeviceImages[nvr.marketName] ? myDeviceImages[nvr.marketName] : null
+						},
+						native: {}
+					});
+				} else {
+					const obj = await this.getObjectAsync(`nvr`);
+
+					if (obj && obj.common && !obj.common.icon && myDeviceImages[nvr.marketName]) {
+						this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
+					}
+				}
+
+				await this.createGenericState('nvr', myDeviceTypes.nvr, nvr, 'nvr');
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
 	/** Create camera states
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
 	 */
@@ -594,20 +638,22 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				}
 
-				await this.createGenericState('cameras', cam.id, myDeviceTypes.cameras, cam, 'cameras');
+				await this.createGenericState(`cameras.${cam.id}`, myDeviceTypes.cameras, cam, 'cameras');
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 	}
 
+
+
 	/** Create all states for a devices, that are defined in {@link myDeviceTypes}
-	 * @param {string} parent id of device (e.g. cameras)
 	 * @param {string} channel id of channel (e.g. camera id)
 	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
 	 * @param {object} objValues ufp bootstrap values of device
+	 * @param {string} filterComparisonId id for filter
 	 */
-	async createGenericState(parent, channel, deviceTypes, objValues, filterComparisonId) {
+	async createGenericState(channel, deviceTypes, objValues, filterComparisonId) {
 		const logPrefix = '[createGenericState]:';
 
 		try {
@@ -625,8 +671,8 @@ class UnifiProtectNvr extends utils.Adapter {
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
 							// not on blacklist
 
-							if (!await this.objectExists(`${parent}.${channel}.${stateId}`)) {
-								this.log.debug(`${logPrefix} creating state '${parent}.${channel}.${stateId}'`);
+							if (!await this.objectExists(`${channel}.${stateId}`)) {
+								this.log.debug(`${logPrefix} creating state '${channel}.${stateId}'`);
 								const obj = {
 									type: 'state',
 									common: {
@@ -645,21 +691,21 @@ class UnifiProtectNvr extends utils.Adapter {
 								}
 
 								// @ts-ignore
-								await this.setObjectAsync(`${parent}.${channel}.${stateId}`, obj);
+								await this.setObjectAsync(`${channel}.${stateId}`, obj);
 							}
 
 							if (deviceTypes[id].write && deviceTypes[id].write === true) {
 								// state is writeable -> subscribe it
-								this.log.silly(`${logPrefix} subscribing state '${parent}.${channel}.${id}'`);
-								await this.subscribeStatesAsync(`${parent}.${channel}.${stateId}`);
+								this.log.silly(`${logPrefix} subscribing state '${channel}.${id}'`);
+								await this.subscribeStatesAsync(`${channel}.${stateId}`);
 							}
 
 							if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
 								// write current val to state
 								if (deviceTypes[id].convertVal) {
-									await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+									await this.setStateChangedAsync(`${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
 								} else {
-									await this.setStateChangedAsync(`${parent}.${channel}.${stateId}`, objValues[id], true);
+									await this.setStateChangedAsync(`${channel}.${stateId}`, objValues[id], true);
 								}
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
@@ -669,18 +715,18 @@ class UnifiProtectNvr extends utils.Adapter {
 							}
 						} else {
 							// is on blacklist
-							if (await this.objectExists(`${parent}.${channel}.${stateId}`)) {
-								this.log.info(`${logPrefix} deleting blacklisted state '${parent}.${channel}.${stateId}'`);
-								await this.delObjectAsync(`${parent}.${channel}.${stateId}`);
+							if (await this.objectExists(`${channel}.${stateId}`)) {
+								this.log.info(`${logPrefix} deleting blacklisted state '${channel}.${stateId}'`);
+								await this.delObjectAsync(`${channel}.${stateId}`);
 							}
 						}
 					} else {
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
 							// it's a channel, create it and iterate again over the properties
-							if (!await this.objectExists(`${parent}.${channel}.${id}`)) {
-								this.log.debug(`${logPrefix} creating channel '${parent}.${channel}.${id}'`);
+							if (!await this.objectExists(`${channel}.${id}`)) {
+								this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
 
-								await this.setObjectAsync(`${parent}.${channel}.${id}`, {
+								await this.setObjectAsync(`${channel}.${id}`, {
 									type: 'channel',
 									common: {
 										name: id
@@ -692,15 +738,15 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 								for (let i = 0; i <= objValues[id].length - 1; i++) {
-									await this.createGenericState(parent, `${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
+									await this.createGenericState(`${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
 								}
 							} else {
-								await this.createGenericState(parent, `${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
+								await this.createGenericState(`${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
 							}
 						} else {
-							if (await this.objectExists(`${parent}.${channel}.${id}`)) {
-								this.log.info(`${logPrefix} deleting blacklisted channel '${parent}.${channel}.${id}'`);
-								await this.delObjectAsync(`${parent}.${channel}.${id}`, { recursive: true });
+							if (await this.objectExists(`${channel}.${id}`)) {
+								this.log.info(`${logPrefix} deleting blacklisted channel '${channel}.${id}'`);
+								await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
 							}
 						}
 					}
