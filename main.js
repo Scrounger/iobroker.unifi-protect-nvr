@@ -39,6 +39,11 @@ class UnifiProtectNvr extends utils.Adapter {
 			info: (message, ...parameters) => this.log.info(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`),
 			warn: (message, ...parameters) => this.log.debug(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`)
 		};
+		this.ufpEventsToIgnore = [
+			'videoExported',
+			'update',
+			'recordingModeChanged'
+		];
 
 		this.devices = {
 			nvr: {},
@@ -437,7 +442,11 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					}
 				} else if (Object.prototype.hasOwnProperty.call(payload, 'type')) {
-					this.log.warn(`${logPrefix} event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
+					if (!this.ufpEventsToIgnore.includes(payload.type)) {
+						this.log.warn(`${logPrefix} event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
+					} else {
+						this.log.debug(`${logPrefix} event from type '${payload.type}' is on the events ignore list. (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
+					}
 				}
 			}
 		} catch (error) {
