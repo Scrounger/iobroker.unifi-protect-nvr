@@ -33,6 +33,13 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		this.isConnected = false;
 		this.ufp = undefined;
+		this.ufpLog = {
+			debug: (message, ...parameters) => this.log.debug(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`),
+			error: (message, ...parameters) => this.log.error(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`),
+			info: (message, ...parameters) => this.log.info(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`),
+			warn: (message, ...parameters) => this.log.debug(`[ufp API]: ${message}${parameters && parameters.length > 0 ? ` - ${JSON.stringify(parameters)}` : ''}`)
+		};
+
 		this.devices = {
 			nvr: {},
 			cameras: {}
@@ -95,7 +102,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.debug(`${logPrefix} Loading unifi-protect ESM Module dynamically`);
 
 				const UnifiProtectImport = (await import('unifi-protect')).ProtectApi;
-				this.ufp = new UnifiProtectImport(this.log);
+				this.ufp = new UnifiProtectImport(this.ufpLog);
 
 				// listen to realtime events (must be given as function to be able to use this)
 				this.ufp.on('message', (event) => this.onProtectEvent(event));
@@ -764,7 +771,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 	/** Update device values from event payload
 	 * @param {any} idDevice id of device (e.g. camera id)
-	 * @param {string} idParentDevice id of parent device (e.g. cameras)
+	 * @param {string | undefined} idParentDevice id of parent device (e.g. cameras)
 	 * @param {object} deviceTypes defined states and types in {@link myDeviceTypes}
 	 * @param {object} payload data from event
 	 */
