@@ -368,6 +368,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			this.aliveTimestamp = moment().valueOf();
 
+			// this.log.warn(JSON.stringify(event));
+
 			if (event.header.modelKey === 'camera') {
 				const camId = event.header.id;
 
@@ -652,7 +654,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				}
 
-				await this.createGenericState('nvr', myDeviceTypes.nvr, nvr, 'nvr');
+				await this.createGenericState('nvr', myDeviceTypes.nvr, nvr, 'nvr', nvr);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -682,7 +684,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				}
 
-				await this.createGenericState(`cameras.${cam.id}`, myDeviceTypes.cameras, cam, 'cameras');
+				await this.createGenericState(`cameras.${cam.id}`, myDeviceTypes.cameras, cam, 'cameras', cam);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -697,7 +699,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {object} objValues ufp bootstrap values of device
 	 * @param {string} filterComparisonId id for filter
 	 */
-	async createGenericState(channel, deviceTypes, objValues, filterComparisonId) {
+	async createGenericState(channel, deviceTypes, objValues, filterComparisonId, objOrg) {
 		const logPrefix = '[createGenericState]:';
 
 		try {
@@ -705,6 +707,11 @@ class UnifiProtectNvr extends utils.Adapter {
 			for (const id in deviceTypes) {
 				try {
 					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+
+						if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'hasFeature')) {
+							this.log.warn(myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg));
+						}
+
 						// if we have a 'type' property, then it's a state
 						let stateId = id;
 
@@ -739,7 +746,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							// allowed common states are defined in an other property, get it and update states if needed
 							if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'statesFromProperty')) {
-								const statesFromProp = myHelper.getAllowedCommonStates(deviceTypes[id].statesFromProperty, objValues);
+								const statesFromProp = myHelper.getAllowedCommonStates(deviceTypes[id].statesFromProperty, objOrg);
 
 								if (statesFromProp) {
 									const obj = await this.getObjectAsync(`${channel}.${stateId}`);
@@ -786,26 +793,43 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					} else {
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
-							// it's a channel, create it and iterate again over the properties
-							if (!await this.objectExists(`${channel}.${id}`)) {
-								this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
+							if (id !== 'hasFeature') {
+								// it's a channel, create it and iterate again over the properties
 
-								await this.setObjectAsync(`${channel}.${id}`, {
-									type: 'channel',
-									common: {
-										name: id
-									},
-									native: {}
-								});
-
-							}
-
-							if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
-								for (let i = 0; i <= objValues[id].length - 1; i++) {
-									await this.createGenericState(`${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`);
+								// first check if this feature is available for device
+								if (deviceTypes[id].hasFeature) {
+									const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
+									if (!hasFeature) {
+										if (await this.objectExists(`${channel}.${id}`)) {
+											this.log.info(`${logPrefix} deleting channel '${channel}.${id}', because feature is not available`);
+											await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
+										} else {
+											this.log.debug(`${logPrefix} skip creating channel '${channel}.${id}', because feature is not available`);
+										}
+										continue;
+									}
 								}
-							} else {
-								await this.createGenericState(`${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`);
+
+								if (!await this.objectExists(`${channel}.${id}`)) {
+									this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
+
+									await this.setObjectAsync(`${channel}.${id}`, {
+										type: 'channel',
+										common: {
+											name: id
+										},
+										native: {}
+									});
+
+								}
+
+								if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+									for (let i = 0; i <= objValues[id].length - 1; i++) {
+										await this.createGenericState(`${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`, objOrg);
+									}
+								} else {
+									await this.createGenericState(`${channel}.${id}`, deviceTypes[id], objValues[id], `${filterComparisonId}.${id}`, objOrg);
+								}
 							}
 						} else {
 							if (await this.objectExists(`${channel}.${id}`)) {
