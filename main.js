@@ -42,7 +42,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.ufpEventsToIgnore = [
 			'videoExported',
 			'update',
-			'recordingModeChanged'
+			'recordingModeChanged',
+			'resolutionChanged'
 		];
 
 		this.devices = {
@@ -732,9 +733,29 @@ class UnifiProtectNvr extends utils.Adapter {
 								if (deviceTypes[id].states) {
 									obj.common.states = deviceTypes[id].states;
 								}
-
 								// @ts-ignore
 								await this.setObjectAsync(`${channel}.${stateId}`, obj);
+							}
+
+							// allowed common states are defined in an other property, get it and update states if needed
+							if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'statesFromProperty')) {
+								const statesFromProp = myHelper.getAllowedCommonStates(deviceTypes[id].statesFromProperty, objValues);
+
+								if (statesFromProp) {
+									const obj = await this.getObjectAsync(`${channel}.${stateId}`);
+
+									if (obj && obj.common) {
+										if (!obj.common.states) {
+											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
+											this.log.debug(`${logPrefix} set allowed common.states for '${channel}.${stateId}' (from: ${deviceTypes[id].statesFromProperty})`);
+										} else if (obj.common.states && JSON.stringify(obj.common.states) !== JSON.stringify(statesFromProp)) {
+											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
+											this.log.debug(`${logPrefix} update allowed common.states for '${channel}.${stateId}' (from: ${deviceTypes[id].statesFromProperty})`);
+										}
+									}
+								} else {
+									this.log.warn(`${logPrefix} extract allowed states for '${stateId}' not possible (statesFromProperty: ${deviceTypes[id].statesFromProperty})`);
+								}
 							}
 
 							if (deviceTypes[id].write && deviceTypes[id].write === true) {
