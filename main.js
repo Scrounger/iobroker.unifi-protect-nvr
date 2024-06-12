@@ -82,7 +82,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.fileNameFormat = 'YYYY_MM_DD_HH_mm_ss';
 
 		this.configFilterList = [];		// List for AutoComplete in adapter settings
-		this.configFilterListIgnore = ['cameras'];
+		this.configFilterListIgnore = ['cameras', 'nvr'];
 		this.blacklistedStates = [];	// prepared List for filtering out states
 
 		this.on('ready', this.onReady.bind(this));
@@ -114,7 +114,6 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.ufp.on('message', (event) => this.onProtectEvent(event));
 
 				await this.establishConnection(true);
-
 			} else {
 				this.log.warn(`${logPrefix} no login credentials in adapter config set!`);
 			}
@@ -709,7 +708,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 
 						// first check if this feature is available for device
-						if (!await this.featureCheck(id, channel, deviceTypes, objOrg)) continue;
+						if (!await this.featureCheck(id, channel, deviceTypes, objOrg, 'state')) continue;
 
 						// if we have a 'type' property, then it's a state
 						let stateId = id;
@@ -796,7 +795,7 @@ class UnifiProtectNvr extends utils.Adapter {
 								// it's a channel, create it and iterate again over the properties
 
 								// first check if this feature is available for device
-								if (!await this.featureCheck(id, channel, deviceTypes, objOrg)) continue;
+								if (!await this.featureCheck(id, channel, deviceTypes, objOrg, 'channel')) continue;
 
 								if (!await this.objectExists(`${channel}.${id}`)) {
 									this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
@@ -835,7 +834,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async featureCheck(id, channel, deviceTypes, objOrg) {
+	async featureCheck(id, channel, deviceTypes, objOrg, stateType) {
 		const logPrefix = '[featureCheck]:';
 
 		try {
@@ -843,10 +842,10 @@ class UnifiProtectNvr extends utils.Adapter {
 				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
 				if (!hasFeature) {
 					if (await this.objectExists(`${channel}.${id}`)) {
-						this.log.info(`${logPrefix} deleting state '${channel}.${id}', because feature is not available`);
+						this.log.info(`${logPrefix} deleting ${stateType} '${channel}.${id}', because feature is not available`);
 						await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
 					} else {
-						this.log.debug(`${logPrefix} skip creating state '${channel}.${id}', because feature is not available`);
+						this.log.debug(`${logPrefix} skip creating ${stateType} '${channel}.${id}', because feature is not available`);
 					}
 					return false;
 				}
@@ -954,7 +953,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {string} idPrefix
 	 */
 	async createConfigFilterList(deviceTypes, idPrefix = '') {
-		const logPrefix = '[createFilterList]:';
+		const logPrefix = '[createConfigFilterList]:';
 
 		try {
 			for (const key in deviceTypes) {
@@ -973,14 +972,16 @@ class UnifiProtectNvr extends utils.Adapter {
 						value: `${idPrefix}${key}`,
 					});
 				} else {
-					if (!this.configFilterListIgnore.includes(key)) {
-						this.configFilterList.push({
-							label: `[Channel]\t ${idPrefix}${key}`,
-							value: `${idPrefix}${key}`,
-						});
-					}
+					if (key !== 'hasFeature') {
+						if (!this.configFilterListIgnore.includes(key)) {
+							this.configFilterList.push({
+								label: `[Channel]\t ${idPrefix}${key}`,
+								value: `${idPrefix}${key}`,
+							});
+						}
 
-					await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
+						await this.createConfigFilterList(deviceTypes[key], `${idPrefix}${key}.`);
+					}
 				}
 			}
 		} catch (error) {
