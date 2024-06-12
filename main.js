@@ -708,9 +708,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				try {
 					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 
-						if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'hasFeature')) {
-							this.log.warn(myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg));
-						}
+						// first check if this feature is available for device
+						if (!await this.featureCheck(id, channel, deviceTypes, objOrg)) continue;
 
 						// if we have a 'type' property, then it's a state
 						let stateId = id;
@@ -797,18 +796,7 @@ class UnifiProtectNvr extends utils.Adapter {
 								// it's a channel, create it and iterate again over the properties
 
 								// first check if this feature is available for device
-								if (deviceTypes[id].hasFeature) {
-									const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
-									if (!hasFeature) {
-										if (await this.objectExists(`${channel}.${id}`)) {
-											this.log.info(`${logPrefix} deleting channel '${channel}.${id}', because feature is not available`);
-											await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
-										} else {
-											this.log.debug(`${logPrefix} skip creating channel '${channel}.${id}', because feature is not available`);
-										}
-										continue;
-									}
-								}
+								if (!await this.featureCheck(id, channel, deviceTypes, objOrg)) continue;
 
 								if (!await this.objectExists(`${channel}.${id}`)) {
 									this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
@@ -847,6 +835,28 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	async featureCheck(id, channel, deviceTypes, objOrg) {
+		const logPrefix = '[featureCheck]:';
+
+		try {
+			if (deviceTypes[id].hasFeature) {
+				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
+				if (!hasFeature) {
+					if (await this.objectExists(`${channel}.${id}`)) {
+						this.log.info(`${logPrefix} deleting state '${channel}.${id}', because feature is not available`);
+						await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
+					} else {
+						this.log.debug(`${logPrefix} skip creating state '${channel}.${id}', because feature is not available`);
+					}
+					return false;
+				}
+			}
+
+			return true;
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
 
 	/** Update device values from event payload
 	 * @param {any} idDevice id of device (e.g. camera id)
