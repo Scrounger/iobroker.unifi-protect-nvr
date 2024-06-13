@@ -46,7 +46,9 @@ class UnifiProtectNvr extends utils.Adapter {
 			'resolutionChanged',
 			'resolutionLowered',
 			'poorConnection',
-			'provision'
+			'provision',
+			'deviceUnadopted',
+			'disconnect'
 		];
 
 		this.devices = {
@@ -473,9 +475,9 @@ class UnifiProtectNvr extends utils.Adapter {
 					}
 				} else if (Object.prototype.hasOwnProperty.call(payload, 'type')) {
 					if (!this.ufpEventsToIgnore.includes(payload.type)) {
-						this.log.warn(`${logPrefix} event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
+						this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(cam)} - event from type '${payload.type}' is not implemented! Please report this to the developer (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
 					} else {
-						this.log.debug(`${logPrefix} event from type '${payload.type}' is on the events ignore list. (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
+						this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(cam)} - event from type '${payload.type}' is on the events ignore list. (header: ${JSON.stringify(header)}, payload: ${JSON.stringify(payload)})`);
 					}
 				}
 			}
