@@ -848,6 +848,14 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - set allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
 			}
 
+			if (deviceTypes[id].min || deviceTypes[id].min === 0) {
+				common.min = deviceTypes[id].min;
+			}
+
+			if (deviceTypes[id].max || deviceTypes[id].max === 0) {
+				common.max = deviceTypes[id].max;
+			}
+
 			return common;
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
