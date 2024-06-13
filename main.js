@@ -731,45 +731,27 @@ class UnifiProtectNvr extends utils.Adapter {
 							// not on blacklist
 
 							if (!await this.objectExists(`${channel}.${stateId}`)) {
+								// create State
 								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - creating state '${logMsgState}'`);
 								const obj = {
 									type: 'state',
-									common: {
-										name: deviceTypes[id].name ? deviceTypes[id].name : id,
-										type: deviceTypes[id].type,
-										read: deviceTypes[id].read ? deviceTypes[id].read : true,
-										write: deviceTypes[id].write ? deviceTypes[id].write : false,
-										role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
-										unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
-									},
+									common: await this.getCommonGenericState(id, deviceTypes, objOrg, logMsgState),
 									native: {}
 								};
 
-								if (deviceTypes[id].states) {
-									obj.common.states = deviceTypes[id].states;
-								}
 								// @ts-ignore
 								await this.setObjectAsync(`${channel}.${stateId}`, obj);
-							}
+							} else {
+								// update State if needed
+								const obj = await this.getObjectAsync(`${channel}.${stateId}`);
 
-							// allowed common states are defined in an other property, get it and update states if needed
-							if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'statesFromProperty')) {
-								const statesFromProp = myHelper.getAllowedCommonStates(deviceTypes[id].statesFromProperty, objOrg);
+								const commonUpdated = await this.getCommonGenericState(id, deviceTypes, objOrg, logMsgState);
 
-								if (statesFromProp) {
-									const obj = await this.getObjectAsync(`${channel}.${stateId}`);
-
-									if (obj && obj.common) {
-										if (!obj.common.states) {
-											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
-											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - set allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
-										} else if (obj.common.states && JSON.stringify(obj.common.states) !== JSON.stringify(statesFromProp)) {
-											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
-											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - update allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
-										}
+								if (obj && obj.common) {
+									if (JSON.stringify(obj.common) !== JSON.stringify(commonUpdated)) {
+										await this.extendObject(`${channel}.${stateId}`, { common: commonUpdated });
+										this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - updated common properties of state '${logMsgState}'`);
 									}
-								} else {
-									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - extract allowed states for '${logMsgState}' not possible (statesFromProperty: ${deviceTypes[id].statesFromProperty})`);
 								}
 							}
 
@@ -839,6 +821,34 @@ class UnifiProtectNvr extends utils.Adapter {
 					this.log.error(`${logPrefix} [id: ${id}] error: ${error}, stack: ${error.stack}`);
 				}
 			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async getCommonGenericState(id, deviceTypes, objOrg, logMsgState) {
+		const logPrefix = '[getCommonGenericState]:';
+
+		try {
+			const common = {
+				name: deviceTypes[id].name ? deviceTypes[id].name : id,
+				type: deviceTypes[id].type,
+				read: deviceTypes[id].read ? deviceTypes[id].read : true,
+				write: deviceTypes[id].write ? deviceTypes[id].write : false,
+				role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
+				unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
+			};
+
+			if (deviceTypes[id].states) {
+				common.states = deviceTypes[id].states;
+			} else if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'statesFromProperty')) {
+				const statesFromProp = myHelper.getAllowedCommonStates(deviceTypes[id].statesFromProperty, objOrg);
+
+				common.states = statesFromProp;
+				this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - set allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
+			}
+
+			return common;
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
