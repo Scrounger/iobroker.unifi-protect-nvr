@@ -43,7 +43,10 @@ class UnifiProtectNvr extends utils.Adapter {
 			'videoExported',
 			'update',
 			'recordingModeChanged',
-			'resolutionChanged'
+			'resolutionChanged',
+			'resolutionLowered',
+			'poorConnection',
+			'provision'
 		];
 
 		this.devices = {
@@ -704,6 +707,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			// {@link myDevices}
 			for (const id in deviceTypes) {
+				let logMsgState = `${channel}.${id}`.substring(`${channel}.${id}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+
 				try {
 					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 
@@ -717,11 +722,14 @@ class UnifiProtectNvr extends utils.Adapter {
 							// if we have a custom state, use defined id
 							stateId = deviceTypes[id].id;
 						}
+
+						logMsgState = `${channel}.${id}`.substring(`${channel}.${stateId}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
 							// not on blacklist
 
 							if (!await this.objectExists(`${channel}.${stateId}`)) {
-								this.log.debug(`${logPrefix} creating state '${channel}.${stateId}'`);
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - creating state '${logMsgState}'`);
 								const obj = {
 									type: 'state',
 									common: {
@@ -752,20 +760,20 @@ class UnifiProtectNvr extends utils.Adapter {
 									if (obj && obj.common) {
 										if (!obj.common.states) {
 											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
-											this.log.debug(`${logPrefix} set allowed common.states for '${channel}.${stateId}' (from: ${deviceTypes[id].statesFromProperty})`);
+											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - set allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
 										} else if (obj.common.states && JSON.stringify(obj.common.states) !== JSON.stringify(statesFromProp)) {
 											await this.extendObject(`${channel}.${stateId}`, { common: { states: statesFromProp } });
-											this.log.debug(`${logPrefix} update allowed common.states for '${channel}.${stateId}' (from: ${deviceTypes[id].statesFromProperty})`);
+											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - update allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
 										}
 									}
 								} else {
-									this.log.warn(`${logPrefix} extract allowed states for '${stateId}' not possible (statesFromProperty: ${deviceTypes[id].statesFromProperty})`);
+									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - extract allowed states for '${logMsgState}' not possible (statesFromProperty: ${deviceTypes[id].statesFromProperty})`);
 								}
 							}
 
 							if (deviceTypes[id].write && deviceTypes[id].write === true) {
 								// state is writeable -> subscribe it
-								this.log.silly(`${logPrefix} subscribing state '${channel}.${id}'`);
+								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - subscribing state '${logMsgState}'`);
 								await this.subscribeStatesAsync(`${channel}.${stateId}`);
 							}
 
@@ -779,13 +787,13 @@ class UnifiProtectNvr extends utils.Adapter {
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 									// only report it if it's not a custom defined state
-									this.log.warn(`${logPrefix} property '${channel}.${stateId}' not exists in bootstrap values`);
+									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values`);
 								}
 							}
 						} else {
 							// is on blacklist
 							if (await this.objectExists(`${channel}.${stateId}`)) {
-								this.log.info(`${logPrefix} deleting blacklisted state '${channel}.${stateId}'`);
+								this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting blacklisted state '${logMsgState}'`);
 								await this.delObjectAsync(`${channel}.${stateId}`);
 							}
 						}
@@ -798,7 +806,7 @@ class UnifiProtectNvr extends utils.Adapter {
 								if (!await this.featureCheck(id, channel, deviceTypes, objOrg, 'channel')) continue;
 
 								if (!await this.objectExists(`${channel}.${id}`)) {
-									this.log.debug(`${logPrefix} creating channel '${channel}.${id}'`);
+									this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - creating channel '${logMsgState}'`);
 
 									await this.setObjectAsync(`${channel}.${id}`, {
 										type: 'channel',
@@ -820,7 +828,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							}
 						} else {
 							if (await this.objectExists(`${channel}.${id}`)) {
-								this.log.info(`${logPrefix} deleting blacklisted channel '${channel}.${id}'`);
+								this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting blacklisted channel '${logMsgState}'`);
 								await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
 							}
 						}
@@ -840,12 +848,14 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			if (deviceTypes[id].hasFeature) {
 				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
+				const logMsgState = `${channel}.${id}`.substring(`${channel}.${id}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+
 				if (!hasFeature) {
 					if (await this.objectExists(`${channel}.${id}`)) {
-						this.log.info(`${logPrefix} deleting ${stateType} '${channel}.${id}', because feature is not available`);
+						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting ${stateType} '${logMsgState}', because feature is not available`);
 						await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
 					} else {
-						this.log.debug(`${logPrefix} skip creating ${stateType} '${channel}.${id}', because feature is not available`);
+						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating ${stateType} '${logMsgState}', because feature is not available`);
 					}
 					return false;
 				}
