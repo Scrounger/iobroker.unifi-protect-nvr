@@ -48,7 +48,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			'poorConnection',
 			'provision',
 			'deviceUnadopted',
-			'disconnect'
+			'disconnect',
+			'nonScheduledRecording'
 		];
 
 		this.devices = {
