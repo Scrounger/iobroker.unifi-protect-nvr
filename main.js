@@ -388,12 +388,21 @@ class UnifiProtectNvr extends utils.Adapter {
 
 			if (event.header.modelKey === 'camera') {
 				const camId = event.header.id;
-
-				await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
+				if (this.devicesById[camId]) {
+					await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
+				} else {
+					this.log.warn(`${logPrefix} unknown device (id: ${camId}). Please restart the adapter to detect new devices`);
+				}
 			} else if (event.header.modelKey === 'event') {
 				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
-					const cam = this.devicesById[event.header.recordId];
-					this.onCamMotionEvent(cam, event.header, event.payload);
+					const camId = event.header.recordId;
+
+					if (this.devicesById[camId]) {
+						const cam = this.devicesById[event.header.recordId];
+						this.onCamMotionEvent(cam, event.header, event.payload);
+					} else {
+						this.log.warn(`${logPrefix} unknown device (id: ${camId}). Please restart the adapter to detect new devices`);
+					}
 				}
 			} else if (event.header.modelKey === 'nvr') {
 				await this.updateStates('nvr', undefined, this.devices.nvr, myDeviceTypes.nvr, event.payload);
@@ -783,7 +792,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 									// only report it if it's not a custom defined state
-									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values`);
+									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated in the Unifi Protect application)`);
 								}
 							}
 						} else {
@@ -883,15 +892,23 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (deviceTypes[id].hasFeature) {
+				// if we have a 'type' property, then it's a state
+				let stateId = id;
+
+				if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
+					// if we have a custom state, use defined id
+					stateId = deviceTypes[id].id;
+				}
+
 				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
-				const logMsgState = '.' + `${channel}.${id}`.split('.')?.slice(1)?.join('.');
+				const logMsgState = '.' + `${channel}.${stateId}`.split('.')?.slice(1)?.join('.');
 
 				if (!hasFeature) {
-					if (await this.objectExists(`${channel}.${id}`)) {
-						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting ${stateType} '${logMsgState}', because feature is not available`);
-						await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
+					if (await this.objectExists(`${channel}.${stateId}`)) {
+						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting ${stateType} '${logMsgState}', because feature is not available for this device`);
+						await this.delObjectAsync(`${channel}.${stateId}`, { recursive: true });
 					} else {
-						this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating ${stateType} '${logMsgState}', because feature is not available`);
+						this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating ${stateType} '${logMsgState}', because feature is not available for this device`);
 					}
 					return false;
 				}

@@ -188,6 +188,12 @@
       },
       {
         "id": "cameras.osdSettings"
+      },
+      {
+        "id": "cameras.recordingSettings.inScheduleMode"
+      },
+      {
+        "id": "cameras.recordingSettings.outScheduleMode"
       }
     ]
   },
