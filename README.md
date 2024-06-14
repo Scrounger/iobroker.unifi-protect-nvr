@@ -1,4 +1,4 @@
-![Logo](admin/unifi-protect-nvr.png)
+<img src="admin/unifi-protect-nvr.svg" width="200" height="200" />
 
 # ioBroker.unifi-protect-nvr
 
@@ -13,7 +13,8 @@
 
 ## unifi-protect-nvr adapter for ioBroker
 
-todo
+Unifi Protect Adapter for ioBroker based on the great [unifi-protect library from hjdhjd](https://github.com/hjdhjd/unifi-protect).\
+This adapter uses the websocket interface to receive real-time information from the unifi-protect application
 
 ## Developer manual
 
@@ -124,6 +125,7 @@ For later updates, the above procedure is not necessary. Just do the following:
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+
 ### 1.0.0-alpha.3 (2024-06-14)
 
 - (Scrounger) work in progress

@@ -274,6 +274,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				// Send response in callback if required
 				if (obj.callback) this.sendTo(obj.from, obj.command, this.configFilterList, obj.callback);
+			} else if (obj.command === 'jsonBootstrap') {
+				if (await this.ufp?.getBootstrap()) {
+					if (obj.callback) this.sendTo(obj.from, obj.command, JSON.stringify(this.ufp?.bootstrap, null, '\t'), obj.callback);
+				} else {
+					if (obj.callback) this.sendTo(obj.from, obj.command, 'no data retrieved!', obj.callback);
+				}
 			}
 		}
 	}

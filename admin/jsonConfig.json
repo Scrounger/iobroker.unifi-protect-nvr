@@ -1,200 +1,227 @@
 {
 	"i18n": true,
-	"type": "panel",
+	"type": "tabs",
 	"items": {
-		"dividerCredentials": {
-			"newLine": true,
-			"type": "header",
-			"text": "credentials",
-			"size": 2
-		},
-		"host": {
-			"type": "text",
-			"label": "IP Adress / Hostname",
-			"newLine": true,
-			"sm": 12,
-			"md": 2
-		},
-		"user": {
-			"type": "text",
-			"label": "Username",
-			"sm": 12,
-			"md": 2
-		},
-		"password": {
-			"type": "password",
-			"label": "Password",
-			"sm": 12,
-			"md": 2
-		},
-		"stateChangeRetryDelay": {
-			"type": "number",
-			"label": "State Change Retry Delay [s]",
-			"min": 0,
-			"sm": 12,
-			"md": 2
-		},
-		"dividerMotionEvents": {
-			"newLine": true,
-			"type": "header",
-			"text": "motion events",
-			"size": 2
-		},
-		"motionEventsEnabled": {
-			"type": "checkbox",
-			"label": "Motion Events enabled",
-			"newLine": true,
-			"sm": 12,
-			"md": 2
-		},
-		"motionSnapshot": {
-			"type": "checkbox",
-			"label": "Motion Snapshot",
-			"newLine": true,
-			"disabled": "!data.motionEvenst",
-			"sm": 12,
-			"md": 2
-		},
-		"motionSnapshotWidth": {
-			"type": "number",
-			"label": "Motion Snapshot Width",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionSnapshot",
-			"sm": 12,
-			"md": 2
-		},
-		"motionSnapshotHeight": {
-			"type": "number",
-			"label": "Motion Snapshot Height",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionSnapshot",
-			"sm": 12,
-			"md": 2
-		},
-		"motionSnapshotDelay": {
-			"type": "number",
-			"label": "Motion Snapshot Delay (-1 = auto)",
-			"min": -1,
-			"disabled": "!data.motionEvenst || !data.motionSnapshot",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumb": {
-			"type": "checkbox",
-			"label": "Motion Thumbnail",
-			"newLine": true,
-			"disabled": "!data.motionEvenst",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbWidth": {
-			"type": "number",
-			"label": "Motion Thumbnail Width",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionThumb",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbHeight": {
-			"type": "number",
-			"label": "Motion Thumbnail Height",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionThumb",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbAnimated": {
-			"type": "checkbox",
-			"label": "Motion Animated Thumbnail",
-			"newLine": true,
-			"disabled": "!data.motionEvenst",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbAnimatedWidth": {
-			"type": "number",
-			"label": "Motion Animated Thumbnail Width",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbAnimatedHeight": {
-			"type": "number",
-			"label": "Motion Animated Thumbnail Height",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
-			"sm": 12,
-			"md": 2
-		},
-		"motionThumbAnimatedSpeedUp": {
-			"type": "number",
-			"label": "Motion Animated Thumbnail SpeedUp",
-			"min": 0,
-			"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
-			"sm": 12,
-			"md": 2
-		},
-		"dividerManualSnapshot": {
-			"newLine": true,
-			"type": "header",
-			"text": "Manual Snapshot",
-			"size": 2
-		},
-		"manualSnapshotWidth": {
-			"newLine": true,
-			"type": "number",
-			"label": "Manual Snapshot Width",
-			"min": 0,
-			"sm": 12,
-			"md": 2
-		},
-		"manualSnapshotHeight": {
-			"type": "number",
-			"label": "Manual Snapshot Height",
-			"min": 0,
-			"sm": 12,
-			"md": 2
-		},
-		"manualSnapshotRetention": {
-			"type": "number",
-			"label": "Manual Snapshot Retention (days, 0 = disabled)",
-			"min": 0,
-			"sm": 12,
-			"md": 2
-		},
-		"dividerMotionBlacklist": {
-			"newLine": true,
-			"type": "header",
-			"text": "Blacklist",
-			"size": 2
-		},
-		"blacklistedStates": {
-			"type": "table",
-			"sm": 12,
-			"md": 12,
-			"lg": 12,
-			"newLine": true,
-			"confirm": {
-				"condition": "!_alive",
-				"title": "Attention!",
-				"text": "This selection is only possible with a running instance!",
-				"ok": "Got it!",
-				"cancel": "cancel",
-				"type": "warning"
-			},
-			"items": [
-				{
-					"type": "autocompleteSendTo",
-					"title": "Choose which states should be excluded",
-					"attr": "id",
-					"sort": true,
-					"filter": true,
-					"noMultiEdit": true,
-					"jsonData": "{\"instanceID\": \"${globalData.instanceID}\",\"adapter\": \"${globalData.adapter}\"}",
-					"command": "filterList"
+		"tab_1": {
+			"type": "panel",
+			"label": "General",
+			"items": {
+				"dividerCredentials": {
+					"newLine": true,
+					"type": "header",
+					"text": "credentials",
+					"size": 2
+				},
+				"host": {
+					"type": "text",
+					"label": "IP Adress / Hostname",
+					"newLine": true,
+					"sm": 12,
+					"md": 2
+				},
+				"user": {
+					"type": "text",
+					"label": "Username",
+					"sm": 12,
+					"md": 2
+				},
+				"password": {
+					"type": "password",
+					"label": "Password",
+					"sm": 12,
+					"md": 2
+				},
+				"stateChangeRetryDelay": {
+					"type": "number",
+					"label": "State Change Retry Delay [s]",
+					"min": 0,
+					"sm": 12,
+					"md": 2
+				},
+				"dividerMotionEvents": {
+					"newLine": true,
+					"type": "header",
+					"text": "motion events",
+					"size": 2
+				},
+				"motionEventsEnabled": {
+					"type": "checkbox",
+					"label": "Motion Events enabled",
+					"newLine": true,
+					"sm": 12,
+					"md": 2
+				},
+				"motionSnapshot": {
+					"type": "checkbox",
+					"label": "Motion Snapshot",
+					"newLine": true,
+					"disabled": "!data.motionEvenst",
+					"sm": 12,
+					"md": 2
+				},
+				"motionSnapshotWidth": {
+					"type": "number",
+					"label": "Motion Snapshot Width",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionSnapshot",
+					"sm": 12,
+					"md": 2
+				},
+				"motionSnapshotHeight": {
+					"type": "number",
+					"label": "Motion Snapshot Height",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionSnapshot",
+					"sm": 12,
+					"md": 2
+				},
+				"motionSnapshotDelay": {
+					"type": "number",
+					"label": "Motion Snapshot Delay (-1 = auto)",
+					"min": -1,
+					"disabled": "!data.motionEvenst || !data.motionSnapshot",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumb": {
+					"type": "checkbox",
+					"label": "Motion Thumbnail",
+					"newLine": true,
+					"disabled": "!data.motionEvenst",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbWidth": {
+					"type": "number",
+					"label": "Motion Thumbnail Width",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionThumb",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbHeight": {
+					"type": "number",
+					"label": "Motion Thumbnail Height",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionThumb",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbAnimated": {
+					"type": "checkbox",
+					"label": "Motion Animated Thumbnail",
+					"newLine": true,
+					"disabled": "!data.motionEvenst",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbAnimatedWidth": {
+					"type": "number",
+					"label": "Motion Animated Thumbnail Width",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbAnimatedHeight": {
+					"type": "number",
+					"label": "Motion Animated Thumbnail Height",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
+					"sm": 12,
+					"md": 2
+				},
+				"motionThumbAnimatedSpeedUp": {
+					"type": "number",
+					"label": "Motion Animated Thumbnail SpeedUp",
+					"min": 0,
+					"disabled": "!data.motionEvenst || !data.motionThumbAnimated",
+					"sm": 12,
+					"md": 2
+				},
+				"dividerManualSnapshot": {
+					"newLine": true,
+					"type": "header",
+					"text": "Manual Snapshot",
+					"size": 2
+				},
+				"manualSnapshotWidth": {
+					"newLine": true,
+					"type": "number",
+					"label": "Manual Snapshot Width",
+					"min": 0,
+					"sm": 12,
+					"md": 2
+				},
+				"manualSnapshotHeight": {
+					"type": "number",
+					"label": "Manual Snapshot Height",
+					"min": 0,
+					"sm": 12,
+					"md": 2
+				},
+				"manualSnapshotRetention": {
+					"type": "number",
+					"label": "Manual Snapshot Retention (days, 0 = disabled)",
+					"min": 0,
+					"sm": 12,
+					"md": 2
+				},
+				"dividerMotionBlacklist": {
+					"newLine": true,
+					"type": "header",
+					"text": "Blacklist",
+					"size": 2
+				},
+				"blacklistedStates": {
+					"type": "table",
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"newLine": true,
+					"confirm": {
+						"condition": "!_alive",
+						"title": "Attention!",
+						"text": "This selection is only possible with a running instance!",
+						"ok": "Got it!",
+						"cancel": "cancel",
+						"type": "warning"
+					},
+					"items": [
+						{
+							"type": "autocompleteSendTo",
+							"title": "Choose which states should be excluded",
+							"attr": "id",
+							"sort": true,
+							"filter": true,
+							"noMultiEdit": true,
+							"jsonData": "{\"instanceID\": \"${globalData.instanceID}\",\"adapter\": \"${globalData.adapter}\"}",
+							"command": "filterList"
+						}
+					]
 				}
-			]
+			}
+		},
+		"tab_2": {
+			"type": "panel",
+			"label": "Data",
+			"items": {
+				"bootstrapJSON": {
+					"type": "text",
+					"label": "Bootstrap Data",
+					"newLine": true,
+					"doNotSave": true,
+					"readOnly": true,
+					"trim": false,
+					"minRows": 2,
+					"defaultSendTo": "jsonBootstrap",
+					"noTranslation": true,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xs": 12
+				}
+			}
 		}
 	}
 }
