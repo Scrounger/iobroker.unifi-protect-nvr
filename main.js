@@ -49,13 +49,16 @@ class UnifiProtectNvr extends utils.Adapter {
 			'provision',
 			'deviceUnadopted',
 			'disconnect',
-			'nonScheduledRecording'
+			'nonScheduledRecording',
+			'cameraPowerCycling'
 		];
 
 		this.devices = {
 			nvr: {},
 			cameras: {}
 		};
+
+		this.devicesById = {};
 
 		this.eventStore = {
 			cameras: {}
@@ -184,33 +187,33 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (state && !state.from.includes(this.namespace)) {
 					// The state was changed
 					if (id.includes('cameras')) {
-						const camId = id.split('.')[3];
+						const camMac = id.split('.')[3];
 
 						if (id.includes(myDeviceTypes.cameras.takeSnapshot.id)) {
-							this.getSnapshot(this.devices.cameras[camId], `cameras.${camId}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
+							this.getSnapshot(this.devices.cameras[camMac], `cameras.${camMac}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
 						} else {
 							// write settings
-							if (this.devices.cameras[camId]) {
-								const writeValFunction = myHelper.getObjectByString(`${id.split(`${camId}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
+							if (this.devices.cameras[camMac]) {
+								const writeValFunction = myHelper.getObjectByString(`${id.split(`${camMac}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
 
 								let objWrite = null;
 
 								if (writeValFunction) {
-									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), writeValFunction(state.val));
+									objWrite = myHelper.strToObj(id.split(`${camMac}.`).pop(), writeValFunction(state.val));
 								} else {
-									objWrite = myHelper.strToObj(id.split(`${camId}.`).pop(), state.val);
+									objWrite = myHelper.strToObj(id.split(`${camMac}.`).pop(), state.val);
 								}
 
-								const success = await this.onStateChangedUfp(camId, id, state, objWrite);
+								const success = await this.onStateChangedUfp(camMac, id, state, objWrite);
 
 								if (!success && this.config.stateChangeRetryDelay > 0) {
 									const that = this;
 									setTimeout(async function () {
-										await that.onStateChangedUfp(camId, id, state, objWrite, true);
+										await that.onStateChangedUfp(camMac, id, state, objWrite, true);
 									}, this.config.stateChangeRetryDelay * 1000);
 								}
 							} else {
-								this.log.error(`${logPrefix} cam (id ${camId}) not exists in devices list`);
+								this.log.error(`${logPrefix} cam (mac: ${camMac}) not exists in devices list`);
 							}
 						}
 					} else {
@@ -229,23 +232,23 @@ class UnifiProtectNvr extends utils.Adapter {
 	}
 
 	/** Send state changed to nvr using ufp
-	 * @param {string} camId
+	 * @param {string} camMac
 	 * @param {string} id
 	 * @param {ioBroker.State} state
 	 * @param {object} objWrite
 	 */
-	async onStateChangedUfp(camId, id, state, objWrite, secondRun = false) {
+	async onStateChangedUfp(camMac, id, state, objWrite, secondRun = false) {
 		const logPrefix = '[onStateChangedUfp]:';
 		try {
 			if (this.ufp) {
-				const response = await this.ufp.updateDevice(this.devices.cameras[camId], objWrite);
+				const response = await this.ufp.updateDevice(this.devices.cameras[camMac], objWrite);
 				if (response !== null) {
-					this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed, objWrite: ${JSON.stringify(objWrite)}`);
-					this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - state '${id}' changed to '${state.val}'${secondRun ? ' (2nd try)' : ''}`);
+					this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - state '.${id.split('.')?.slice(3)?.join('.')}' changed, objWrite: ${JSON.stringify(objWrite)}`);
+					this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - state '.${id.split('.')?.slice(3)?.join('.')}' changed to '${state.val}'${secondRun ? ' (2nd try)' : ''}`);
 
 					return true;
 				} else {
-					this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camId])} - changing state${secondRun ? ' second time' : ''} '${id}' to '${state.val}' not successful!`);
+					this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - changing state${secondRun ? ' second time' : ''} '${id}' to '${state.val}' not successful!`);
 				}
 			}
 		} catch (error) {
@@ -339,6 +342,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (this.ufp.bootstrap.nvr) {
 					this.log.info(`${logPrefix}: Discovered ${this.ufp.bootstrap.nvr.modelKey}: ${this.ufp.getDeviceName(this.ufp.bootstrap.nvr, this.ufp.bootstrap.nvr.name)} (IP: ${this.ufp.bootstrap.nvr.host}, mac: ${this.ufp.bootstrap.nvr.mac}, id: ${this.ufp.bootstrap.nvr.id})`);
 					this.devices.nvr = this.ufp.bootstrap.nvr;
+					this.devicesById[this.ufp.bootstrap.nvr.id] = this.devices.nvr;
 
 					if (isAdapterStart) {
 						await this.createNvrStates(this.ufp.bootstrap.nvr);
@@ -349,7 +353,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (this.ufp.bootstrap.cameras) {
 					for (const cam of this.ufp.bootstrap.cameras) {
 						this.log.info(`${logPrefix}: Discovered ${cam.modelKey}: ${this.ufp.getDeviceName(cam, cam.name)} (IP: ${cam.host}, mac: ${cam.mac}, id: ${cam.id}, state: ${cam.state})`);
-						this.devices.cameras[cam.id] = cam;
+						this.devices.cameras[cam.mac] = cam;
+						this.devicesById[cam.id] = this.devices.cameras[cam.mac];
 
 						if (isAdapterStart) {
 							await this.createCameraStates(cam);
@@ -378,10 +383,10 @@ class UnifiProtectNvr extends utils.Adapter {
 			if (event.header.modelKey === 'camera') {
 				const camId = event.header.id;
 
-				await this.updateStates(camId, 'cameras', this.devices.cameras[camId], myDeviceTypes.cameras, event.payload);
+				await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
 			} else if (event.header.modelKey === 'event') {
 				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
-					const cam = this.devices.cameras[event.header.recordId];
+					const cam = this.devicesById[event.header.recordId];
 					this.onCamMotionEvent(cam, event.header, event.payload);
 				}
 			} else if (event.header.modelKey === 'nvr') {
@@ -407,7 +412,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.debug(`${this.ufp.getDeviceName(cam)} - eventId: ${header.id}, payload: ${JSON.stringify(payload)}`);
 
 				if (payload.type === 'motion' || payload.type === 'smartDetectZone' || payload.type === 'smartDetectLine' || this.eventStore.cameras[header.id]) {
-					const camId = `cameras.${cam.id}`;
+					const camMac = `cameras.${cam.mac}`;
 
 					if (Object.prototype.hasOwnProperty.call(payload, 'start')) {
 						// Motion event start -> start property is available
@@ -429,18 +434,18 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id]);
 
 						// reset snapshot at beginning of motion event
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.defaultImage.snapshot, true);
+						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.defaultImage.snapshot, true);
 
 						// reset thumbnail at beginning of motion event
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, this.defaultImage.thumbnail, true);
+						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, this.defaultImage.thumbnail, true);
 
 						// reset thumbnail animated at beginning of motion event
-						this.setStateExists(`${camId}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, this.defaultImage.thumbnailAnimated, true);
+						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, this.defaultImage.thumbnailAnimated, true);
 
 						// Snapshot Delay configured
 						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
 							setTimeout(() => {
-								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id, true);
+								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}, this.config.motionSnapshotDelay * 1000);
 						}
@@ -453,7 +458,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							// Snapshot configured -1 = auto
 							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
-								this.getSnapshot(cam, `${camId}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, header.id, true);
+								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
 							}
 
@@ -465,10 +470,10 @@ class UnifiProtectNvr extends utils.Adapter {
 								this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id], true);
 
 								if (this.config.motionThumb)
-									this.getEventThumb(cam, `${camId}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
+									this.getEventThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
 
 								if (this.config.motionThumbAnimated)
-									this.getEventAnimatedThumb(cam, `${camId}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, header.id, this.config.motionThumbAnimatedWidth, this.config.motionThumbAnimatedHeight, this.config.motionThumbAnimatedSpeedUp);
+									this.getEventAnimatedThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, header.id, this.config.motionThumbAnimatedWidth, this.config.motionThumbAnimatedHeight, this.config.motionThumbAnimatedSpeedUp);
 
 								delete this.eventStore.cameras[header.id];
 							}
@@ -502,7 +507,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						const imageBase64 = imageBuffer.toString('base64');
 						const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
 
-						this.log.debug(`${logPrefix} thumb successfully received (eventId: ${eventId})`);
+						this.log.debug(`${logPrefix} thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
@@ -533,7 +538,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						const imageBase64 = imageBuffer.toString('base64');
 						const base64ImgString = `data:image/gif;base64,` + imageBase64;
 
-						this.log.debug(`${logPrefix} animated thumb successfully received (eventId: ${eventId})`);
+						this.log.debug(`${logPrefix} animated thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
@@ -554,9 +559,9 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {string} targetId state where the base64 image or url should be stored
 	 * @param {number} width
 	 * @param {number} height
-	 * @param {any} eventId
+	 * @param {boolean} base64Image
 	 */
-	async getSnapshot(cam, targetId, width, height, eventId = undefined, base64Image = false) {
+	async getSnapshot(cam, targetId, width, height, base64Image = false) {
 		if (this.ufp && this.isConnected) {
 			const logPrefix = `[getSnapshot]: ${this.ufp.getDeviceName(cam)} - `;
 
@@ -569,11 +574,11 @@ class UnifiProtectNvr extends utils.Adapter {
 						const imageBase64 = imageBuffer.toString('base64');
 						const base64ImgString = `data:image/jpeg;base64,` + imageBase64;
 
-						this.log.debug(`${logPrefix} snapshot successfully received (eventId: ${eventId})`);
+						this.log.debug(`${logPrefix} snapshot successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
 						await this.setStateExists(targetId, base64ImgString);
 					} else {
-						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.id}/${now.format(this.fileNameFormat)}.png`;
+						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.mac}/${now.format(this.fileNameFormat)}.png`;
 
 						await this.writeFileAsync(this.namespace, filename, imageBuffer);
 
@@ -674,22 +679,22 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
-				if (!await this.objectExists(`cameras.${cam.id}`)) {
+				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
-					this.log.debug(`${logPrefix} creating channel '${cam.id}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
-					await this.createChannelAsync('cameras', cam.id, {
+					this.log.debug(`${logPrefix} creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
+					await this.createChannelAsync('cameras', cam.mac, {
 						name: this.ufp.getDeviceName(cam, cam.name),
 						icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
 					});
 				} else {
-					const obj = await this.getObjectAsync(`cameras.${cam.id}`);
+					const obj = await this.getObjectAsync(`cameras.${cam.mac}`);
 
 					if (obj && obj.common && !obj.common.icon && myDeviceImages[cam.marketName]) {
-						await this.extendObject(`cameras.${cam.id}`, { common: { icon: myDeviceImages[cam.marketName] } });
+						await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
 					}
 				}
 
-				await this.createGenericState(`cameras.${cam.id}`, myDeviceTypes.cameras, cam, 'cameras', cam);
+				await this.createGenericState(`cameras.${cam.mac}`, myDeviceTypes.cameras, cam, 'cameras', cam);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -710,7 +715,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			// {@link myDevices}
 			for (const id in deviceTypes) {
-				let logMsgState = `${channel}.${id}`.substring(`${channel}.${id}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+				let logMsgState = '.' + `${channel}.${id}`.split('.')?.slice(1)?.join('.');
 
 				try {
 					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
@@ -726,7 +731,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							stateId = deviceTypes[id].id;
 						}
 
-						logMsgState = `${channel}.${id}`.substring(`${channel}.${stateId}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+						logMsgState = '.' + `${channel}.${stateId}`.split('.')?.slice(1)?.join('.');
 
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
 							// not on blacklist
@@ -780,6 +785,8 @@ class UnifiProtectNvr extends utils.Adapter {
 							if (await this.objectExists(`${channel}.${stateId}`)) {
 								this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting blacklisted state '${logMsgState}'`);
 								await this.delObjectAsync(`${channel}.${stateId}`);
+							} else {
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating state '${logMsgState}', because it is on blacklist`);
 							}
 						}
 					} else {
@@ -815,6 +822,8 @@ class UnifiProtectNvr extends utils.Adapter {
 							if (await this.objectExists(`${channel}.${id}`)) {
 								this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting blacklisted channel '${logMsgState}'`);
 								await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
+							} else {
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating channel '${logMsgState}', because it is on blacklist`);
 							}
 						}
 					}
@@ -869,14 +878,14 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			if (deviceTypes[id].hasFeature) {
 				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
-				const logMsgState = `${channel}.${id}`.substring(`${channel}.${id}`.indexOf(`${objOrg.id}.`) + objOrg.id.length + 1);
+				const logMsgState = '.' + `${channel}.${id}`.split('.')?.slice(1)?.join('.');
 
 				if (!hasFeature) {
 					if (await this.objectExists(`${channel}.${id}`)) {
 						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - deleting ${stateType} '${logMsgState}', because feature is not available`);
 						await this.delObjectAsync(`${channel}.${id}`, { recursive: true });
 					} else {
-						this.log.info(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating ${stateType} '${logMsgState}', because feature is not available`);
+						this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - skip creating ${stateType} '${logMsgState}', because feature is not available`);
 					}
 					return false;
 				}
@@ -908,7 +917,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							const oldState = await this.getStateAsync(id);
 
 							if (oldState && oldState.val !== val) {
-								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(device)} - update state '${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
+								this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(device)} - update state '.${idDevice}${idPrefix}.${key}': ${val} (oldVal: ${oldState.val})`);
 							}
 						}
 
@@ -1063,7 +1072,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			for (const key in eventStoreObj) {
 				if (Object.prototype.hasOwnProperty.call(myDeviceTypes.cameras, key)) {
-					const id = `${channelId}.${cam.id}.${myDeviceTypes.cameras[key].id}`;
+					const id = `${channelId}.${cam.mac}.${myDeviceTypes.cameras[key].id}`;
 					const val = myDeviceTypes.cameras[key].convertVal ? myDeviceTypes.cameras[key].convertVal(eventStoreObj[key]) : eventStoreObj[key];
 
 					await this.setStateExists(id, val, onlyChanges);
