@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0-alpha.2",
+    "version": "1.0.0-alpha.3",
     "news": {
+      "1.0.0-alpha.3": {
+        "en": "work in progress",
+        "de": "arbeit im laufenden",
+        "ru": "работа",
+        "pt": "trabalho em andamento",
+        "nl": "lopende werkzaamheden",
+        "fr": "travaux en cours",
+        "it": "lavori in corso",
+        "es": "en curso",
+        "pl": "prace w toku",
+        "uk": "робота в прогресі",
+        "zh-cn": "进行中的工作"
+      },
       "1.0.0-alpha.2": {
         "en": "bug fixes",
         "de": "fehlerbehebungen",

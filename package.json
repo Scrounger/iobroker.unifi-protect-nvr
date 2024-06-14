@@ -1,6 +1,6 @@
 {
   "name": "iobroker.unifi-protect-nvr",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Unifi Protect Adapter based on the unifi-protect library from hjdhjd",
   "author": {
     "name": "Scrounger",
