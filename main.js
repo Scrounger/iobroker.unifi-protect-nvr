@@ -662,7 +662,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			if (this.ufp) {
 				if (!await this.objectExists(`nvr`)) {
-					this.log.debug(`${logPrefix} creating channel '${nvr.id}' for nvr '${this.ufp.getDeviceName(nvr, nvr.name)}'`);
+					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - creating channel '${nvr.id}' for nvr '${this.ufp.getDeviceName(nvr, nvr.name)}'`);
 					await this.setObjectAsync('nvr', {
 						type: 'channel',
 						common: {
@@ -674,8 +674,15 @@ class UnifiProtectNvr extends utils.Adapter {
 				} else {
 					const obj = await this.getObjectAsync(`nvr`);
 
-					if (obj && obj.common && !obj.common.icon && myDeviceImages[nvr.marketName]) {
-						await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
+					if (obj && obj.common) {
+						if (!obj.common.icon && myDeviceImages[nvr.marketName]) {
+							await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
+						} else if (obj.common.icon && myDeviceImages[nvr.marketName]) {
+							if (obj.common.icon !== myDeviceImages[nvr.marketName]) {
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - icon updated`);
+								await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
+							}
+						}
 					}
 				}
 
@@ -696,7 +703,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			if (this.ufp) {
 				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
-					this.log.debug(`${logPrefix} creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
+					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
 					await this.createChannelAsync('cameras', cam.mac, {
 						name: this.ufp.getDeviceName(cam, cam.name),
 						icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
@@ -704,8 +711,15 @@ class UnifiProtectNvr extends utils.Adapter {
 				} else {
 					const obj = await this.getObjectAsync(`cameras.${cam.mac}`);
 
-					if (obj && obj.common && !obj.common.icon && myDeviceImages[cam.marketName]) {
-						await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
+					if (obj && obj.common) {
+						if (!obj.common.icon && myDeviceImages[cam.marketName]) {
+							await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
+						} else if (obj.common.icon && myDeviceImages[cam.marketName]) {
+							if (obj.common.icon !== myDeviceImages[cam.marketName]) {
+								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - icon updated`);
+								await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
+							}
+						}
 					}
 				}
 
