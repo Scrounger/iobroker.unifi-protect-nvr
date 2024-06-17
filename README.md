@@ -125,8 +125,7 @@ For later updates, the above procedure is not necessary. Just do the following:
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.0-alpha.4 (2024-06-17)
 
 - (Scrounger) work in progress
 
