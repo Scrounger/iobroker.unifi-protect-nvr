@@ -179,7 +179,28 @@
     "manualSnapshotRetention": 10,
     "blacklistedStates": [
       {
-        "id": "cameras.id"
+        "id": "cameras.eventStats"
+      },
+      {
+        "id": "cameras.stats"
+      },
+      {
+        "id": "cameras.osdSettings"
+      },
+      {
+        "id": "cameras.speakerSettings"
+      },
+      {
+        "id": "cameras.wifiConnectionState"
+      },
+      {
+        "id": "cameras.smartDetectSettings"
+      },
+      {
+        "id": "cameras.ispSettings"
+      },
+      {
+        "id": "cameras.displayName"
       },
       {
         "id": "cameras.marketName"
@@ -194,19 +215,43 @@
         "id": "cameras.micVolume"
       },
       {
-        "id": "cameras.stats"
+        "id": "cameras.connectedSince"
       },
       {
-        "id": "cameras.eventStats"
+        "id": "cameras.currentResolution"
       },
       {
-        "id": "cameras.osdSettings"
+        "id": "cameras.privacyZones"
+      },
+      {
+        "id": "cameras.upSince"
+      },
+      {
+        "id": "cameras.id"
+      },
+      {
+        "id": "cameras.state"
       },
       {
         "id": "cameras.recordingSettings.inScheduleMode"
       },
       {
         "id": "cameras.recordingSettings.outScheduleMode"
+      },
+      {
+        "id": "cameras.recordingSettings.minMotionEventTrigger"
+      },
+      {
+        "id": "cameras.recordingSettings.postPaddingSecs"
+      },
+      {
+        "id": "cameras.recordingSettings.prePaddingSecs"
+      },
+      {
+        "id": "cameras.recordingSettings.smartDetectPrePaddingSecs"
+      },
+      {
+        "id": "cameras.recordingSettings.smartDetectPostPaddingSecs"
       }
     ]
   },
