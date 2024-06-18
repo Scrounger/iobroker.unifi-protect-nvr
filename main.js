@@ -422,6 +422,11 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 			} else if (event.header.modelKey === 'nvr') {
 				await this.updateStates('nvr', undefined, this.devices.nvr, myDeviceTypes.nvr, event.payload);
+			} else if (event.header.modelKey === 'user') {
+				const userId = event.header.id;
+				await this.updateStates(userId, 'users', this.devices.users[userId], myDeviceTypes.users, event.payload);
+			} else {
+				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -863,7 +868,9 @@ class UnifiProtectNvr extends utils.Adapter {
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 									// only report it if it's not a custom defined state
-									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated / used in the Unifi Protect application)`);
+									if (this.log.level === 'debug') {
+										this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated / used in the Unifi Protect application or will update by an event)`);
+									}
 								}
 							}
 						} else {
@@ -908,7 +915,7 @@ class UnifiProtectNvr extends utils.Adapter {
 									}
 								}
 
-								if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+								if (objValues[id] && objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 									for (let i = 0; i <= objValues[id].length - 1; i++) {
 										await this.createGenericState(`${channel}.${id}.${i}`, deviceTypes[id].items, objValues[id][i], `${filterComparisonId}.${id}`, objOrg);
 									}
