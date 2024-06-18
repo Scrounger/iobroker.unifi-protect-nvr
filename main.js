@@ -863,7 +863,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 									// only report it if it's not a custom defined state
-									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated in the Unifi Protect application)`);
+									this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated / used in the Unifi Protect application)`);
 								}
 							}
 						} else {
@@ -877,23 +877,35 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					} else {
 						if (!this.blacklistedStates.includes(`${filterComparisonId}.${id}`)) {
-							if (id !== 'hasFeature') {
+							if (id !== 'hasFeature' && id !== 'name') {
 								// it's a channel, create it and iterate again over the properties
 
 								// first check if this feature is available for device
 								if (!await this.featureCheck(id, channel, deviceTypes, objOrg, 'channel')) continue;
 
+								const common = {
+									name: Object.prototype.hasOwnProperty.call(deviceTypes[id], 'name') ? deviceTypes[id].name : id
+								}
+
 								if (!await this.objectExists(`${channel}.${id}`)) {
+									// create channel
 									this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - creating channel '${logMsgState}'`);
 
 									await this.setObjectAsync(`${channel}.${id}`, {
 										type: 'channel',
-										common: {
-											name: id
-										},
+										common: common,
 										native: {}
 									});
+								} else {
+									// check if common of channel has updates
+									const obj = await this.getObjectAsync(`${channel}.${id}`);
 
+									if (obj && obj.common) {
+										if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+											await this.extendObject(`${channel}.${id}`, { common: common });
+											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - channel updated '${logMsgState}'`);
+										}
+									}
 								}
 
 								if (objValues[id].constructor.name === 'Array' && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
