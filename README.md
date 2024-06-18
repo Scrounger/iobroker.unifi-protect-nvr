@@ -16,6 +16,20 @@
 Unifi Protect Adapter for ioBroker based on the great [unifi-protect library from hjdhjd](https://github.com/hjdhjd/unifi-protect).\
 This adapter uses the websocket interface to receive real-time information from the unifi-protect application
 
+### Tested Devices
+
+The following devices have been successfully tested with the adapter.
+
+| Model             |  Type  | Success |
+| ----------------- | :----: | :-----: |
+| UDM-PRO           |  NVR   |    ✔    |
+| UDM-SE            |  NVR   |    ✔    |
+| G3 Flex           | Camera |    ✔    |
+| G4 Dome           | Camera |    ✔    |
+| G4 Instant        | Camera |    ✔    |
+| G5 Pro + Enhancer | Camera |    ✔    |
+| G5 Turret Ultra   | Camera |    ✔    |
+
 ## Developer manual
 
 This section is intended for the developer. It can be deleted later.
@@ -125,6 +139,7 @@ For later updates, the above procedure is not necessary. Just do the following:
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+
 ### 1.0.0-alpha.4 (2024-06-17)
 
 - (Scrounger) work in progress
