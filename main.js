@@ -677,27 +677,25 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
+				const common = {
+					name: this.ufp.getDeviceName(nvr, nvr.name),
+					icon: myDeviceImages[nvr.marketName] ? myDeviceImages[nvr.marketName] : null
+				}
+
 				if (!await this.objectExists(`nvr`)) {
 					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - creating channel '${nvr.id}' for nvr '${this.ufp.getDeviceName(nvr, nvr.name)}'`);
 					await this.setObjectAsync('nvr', {
 						type: 'channel',
-						common: {
-							name: this.ufp.getDeviceName(nvr, nvr.name),
-							icon: myDeviceImages[nvr.marketName] ? myDeviceImages[nvr.marketName] : null
-						},
+						common: common,
 						native: {}
 					});
 				} else {
 					const obj = await this.getObjectAsync(`nvr`);
 
 					if (obj && obj.common) {
-						if (!obj.common.icon && myDeviceImages[nvr.marketName]) {
-							await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
-						} else if (obj.common.icon && myDeviceImages[nvr.marketName]) {
-							if (obj.common.icon !== myDeviceImages[nvr.marketName]) {
-								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - icon updated`);
-								await this.extendObject(`nvr`, { common: { icon: myDeviceImages[nvr.marketName] } });
-							}
+						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+							await this.extendObject(`nvr`, { common: common });
+							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - channel updated '.nvr'`);
 						}
 					}
 				}
@@ -717,29 +715,27 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
+				const common = {
+					name: this.ufp.getDeviceName(cam, cam.name),
+					icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
+				}
+
 				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
 					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
 
 					await this.setObjectAsync(`cameras.${cam.mac}`, {
 						type: 'channel',
-						common: {
-							name: this.ufp.getDeviceName(cam, cam.name),
-							icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
-						},
+						common: common,
 						native: {}
 					});
 				} else {
 					const obj = await this.getObjectAsync(`cameras.${cam.mac}`);
 
 					if (obj && obj.common) {
-						if (!obj.common.icon && myDeviceImages[cam.marketName]) {
-							await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
-						} else if (obj.common.icon && myDeviceImages[cam.marketName]) {
-							if (obj.common.icon !== myDeviceImages[cam.marketName]) {
-								this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - icon updated`);
-								await this.extendObject(`cameras.${cam.mac}`, { common: { icon: myDeviceImages[cam.marketName] } });
-							}
+						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+							await this.extendObject(`cameras.${cam.mac}`, { common: common });
+							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - channel updated '.${cam.mac}'`);
 						}
 					}
 				}
@@ -758,32 +754,34 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[createCameraStates]:';
 
 		try {
-			if (!await this.objectExists(`users.${user.id}`)) {
-				// create user channel
-				this.log.debug(`${logPrefix} ${user.name} - creating channel '${user.id}' for user '${user.name}'`);
+			if (this.ufp) {
+				const common = {
+					name: user.name
+				}
 
-				await this.setObjectAsync(`users.${user.id}`, {
-					type: 'channel',
-					common: {
-						name: user.name
-					},
-					native: {}
-				});
-			} else {
-				const obj = await this.getObjectAsync(`users.${user.id}`);
 
-				if (obj && obj.common) {
-					if (!obj.common.name) {
-						await this.extendObject(`users.${user.id}`, { common: { name: user.name } });
-					} else if (obj.common.name && obj.common.name !== user.name) {
-						this.log.debug(`${logPrefix} ${user.name} - name updated`);
-						await this.extendObject(`users.${user.id}`, { common: { name: user.name } });
+				if (!await this.objectExists(`users.${user.id}`)) {
+					// create user channel
+					this.log.debug(`${logPrefix} ${user.name} - creating channel '${user.id}' for user '${user.name}'`);
+
+					await this.setObjectAsync(`users.${user.id}`, {
+						type: 'channel',
+						common: common,
+						native: {}
+					});
+				} else {
+					const obj = await this.getObjectAsync(`users.${user.id}`);
+
+					if (obj && obj.common) {
+						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+							await this.extendObject(`users.${user.id}`, { common: common });
+							this.log.debug(`${logPrefix} ${user.name} - channel updated '.${user.id}'`);
+						}
 					}
 				}
+
+				await this.createGenericState(`users.${user.id}`, myDeviceTypes.users, user, 'users', user);
 			}
-
-			await this.createGenericState(`users.${user.id}`, myDeviceTypes.users, user, 'users', user);
-
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
