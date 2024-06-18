@@ -811,12 +811,12 @@ class UnifiProtectNvr extends utils.Adapter {
 				let logMsgState = '.' + `${channel}.${id}`.split('.')?.slice(1)?.join('.');
 
 				try {
-					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'type') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
+					if (id && Object.prototype.hasOwnProperty.call(deviceTypes[id], 'iobType') && !Object.prototype.hasOwnProperty.call(deviceTypes[id], 'isArray')) {
 
 						// first check if this feature is available for device
 						if (!await this.featureCheck(id, channel, deviceTypes, objOrg, 'state')) continue;
 
-						// if we have a 'type' property, then it's a state
+						// if we have a 'iobType' property, then it's a state
 						let stateId = id;
 
 						if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
@@ -949,7 +949,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			const common = {
 				name: deviceTypes[id].name ? deviceTypes[id].name : id,
-				type: deviceTypes[id].type,
+				type: deviceTypes[id].iobType,
 				read: deviceTypes[id].read ? deviceTypes[id].read : true,
 				write: deviceTypes[id].write ? deviceTypes[id].write : false,
 				role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
@@ -984,7 +984,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (deviceTypes[id].hasFeature) {
-				// if we have a 'type' property, then it's a state
+				// if we have a 'hasFeature' property, then it's a state
 				let stateId = id;
 
 				if (Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
@@ -1031,7 +1031,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			for (const key in payload) {
 				if (deviceTypes[key]) {
-					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
+					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'iobType')) {
 						const id = `${idParentDevice ? `${idParentDevice}.` : ''}${idDevice}${idPrefix}.${key}`;
 						const val = deviceTypes[key].convertVal ? deviceTypes[key].convertVal(payload[key]) : payload[key];
 
@@ -1120,7 +1120,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		try {
 			for (const key in deviceTypes) {
 
-				if (key && Object.prototype.hasOwnProperty.call(deviceTypes[key], 'type')) {
+				if (key && Object.prototype.hasOwnProperty.call(deviceTypes[key], 'iobType')) {
 					// if we have a 'type' property, then it's a state
 					let stateId = key;
 
