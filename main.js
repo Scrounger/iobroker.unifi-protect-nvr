@@ -425,6 +425,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			} else if (event.header.modelKey === 'user') {
 				const userId = event.header.id;
 				await this.updateStates(userId, 'users', this.devices.users[userId], myDeviceTypes.users, event.payload);
+
+				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			} else {
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			}
@@ -1132,7 +1134,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						value: `${idPrefix}${key}`,
 					});
 				} else {
-					if (key !== 'hasFeature') {
+					if (key !== 'hasFeature' && key !== 'name') {
 						if (!this.configFilterListIgnore.includes(key)) {
 							this.configFilterList.push({
 								label: `[Channel]\t ${idPrefix}${key}`,
