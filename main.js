@@ -55,7 +55,8 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		this.devices = {
 			nvr: {},
-			cameras: {}
+			cameras: {},
+			users: {}
 		};
 
 		this.devicesById = {};
@@ -353,6 +354,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					if (isAdapterStart) {
 						await this.createNvrStates(this.ufp.bootstrap.nvr);
 					}
+
+					this.log.silly(`${logPrefix} devices.nvr: ${JSON.stringify(this.devices.nvr)}`);
 				}
 
 				// Add Cameras to List
@@ -367,6 +370,19 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					}
 					this.log.silly(`${logPrefix} devices.cameras: ${JSON.stringify(this.devices.cameras)}`);
+				}
+
+				// Add Users to List
+				if (this.ufp.bootstrap.users) {
+					for (const user of this.ufp.bootstrap.users) {
+						this.log.info(`${logPrefix}: Discovered ${user.modelKey}: ${user.name}`);
+						this.devices.users[user.id] = user;
+
+						if (isAdapterStart) {
+							await this.createUserStates(user);
+						}
+					}
+					this.log.silly(`${logPrefix} devices.users: ${JSON.stringify(this.devices.users)}`);
 				}
 			}
 
@@ -391,7 +407,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (this.devicesById[camId]) {
 					await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
 				} else {
-					this.log.warn(`${logPrefix} unknown device (id: ${camId}). Please restart the adapter to detect new devices`);
+					this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 				}
 			} else if (event.header.modelKey === 'event') {
 				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
@@ -401,7 +417,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						const cam = this.devicesById[event.header.recordId];
 						this.onCamMotionEvent(cam, event.header, event.payload);
 					} else {
-						this.log.warn(`${logPrefix} unknown device (id: ${camId}). Please restart the adapter to detect new devices`);
+						this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 					}
 				}
 			} else if (event.header.modelKey === 'nvr') {
@@ -704,9 +720,14 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
 					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
-					await this.createChannelAsync('cameras', cam.mac, {
-						name: this.ufp.getDeviceName(cam, cam.name),
-						icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
+
+					await this.setObjectAsync(`cameras.${cam.mac}`, {
+						type: 'channel',
+						common: {
+							name: this.ufp.getDeviceName(cam, cam.name),
+							icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
+						},
+						native: {}
 					});
 				} else {
 					const obj = await this.getObjectAsync(`cameras.${cam.mac}`);
@@ -725,6 +746,44 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				await this.createGenericState(`cameras.${cam.mac}`, myDeviceTypes.cameras, cam, 'cameras', cam);
 			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	/** Create camera states
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectNvrUserConfigInterface} user
+	 */
+	async createUserStates(user) {
+		const logPrefix = '[createCameraStates]:';
+
+		try {
+			if (!await this.objectExists(`users.${user.id}`)) {
+				// create user channel
+				this.log.debug(`${logPrefix} ${user.name} - creating channel '${user.id}' for user '${user.name}'`);
+
+				await this.setObjectAsync(`users.${user.id}`, {
+					type: 'channel',
+					common: {
+						name: user.name
+					},
+					native: {}
+				});
+			} else {
+				const obj = await this.getObjectAsync(`users.${user.id}`);
+
+				if (obj && obj.common) {
+					if (!obj.common.name) {
+						await this.extendObject(`users.${user.id}`, { common: { name: user.name } });
+					} else if (obj.common.name && obj.common.name !== user.name) {
+						this.log.debug(`${logPrefix} ${user.name} - name updated`);
+						await this.extendObject(`users.${user.id}`, { common: { name: user.name } });
+					}
+				}
+			}
+
+			await this.createGenericState(`users.${user.id}`, myDeviceTypes.users, user, 'users', user);
+
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}

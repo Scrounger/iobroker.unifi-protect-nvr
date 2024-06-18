@@ -206,9 +206,21 @@
 			"type": "panel",
 			"label": "Data",
 			"items": {
+				"hint": {
+					"type": "staticText",
+					"label": "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!",
+					"newLine": true,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xs": 12,
+					"style": {
+						"color": "red",
+						"font-size": "20px"
+					}
+				},
 				"bootstrapJSON": {
 					"type": "text",
-					"label": "Bootstrap Data",
 					"newLine": true,
 					"doNotSave": true,
 					"readOnly": true,
