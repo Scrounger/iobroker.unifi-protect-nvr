@@ -162,6 +162,10 @@
     "user": "",
     "password": "",
     "stateChangeRetryDelay": 15,
+    "camerasEnabled": true,
+    "nvrEnabled": true,
+    "eventsEnabled": false,
+    "usersEnabled": false,
     "motionEventsEnabled": true,
     "motionSnapshot": false,
     "motionSnapshotWidth": 1280,
@@ -298,13 +302,6 @@
         "def": false
       },
       "native": {}
-    },
-    {
-      "_id": "cameras",
-      "type": "device",
-      "common": {
-        "name": "Cameras"
-      }
     }
   ]
 }

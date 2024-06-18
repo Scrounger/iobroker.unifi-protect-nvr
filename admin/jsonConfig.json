@@ -38,6 +38,37 @@
 					"sm": 12,
 					"md": 2
 				},
+				"dividerStates": {
+					"newLine": true,
+					"type": "header",
+					"text": "states",
+					"size": 2
+				},
+				"camerasEnabled": {
+					"type": "checkbox",
+					"label": "Cameras",
+					"newLine": true,
+					"sm": 12,
+					"md": 2
+				},
+				"nvrEnabled": {
+					"type": "checkbox",
+					"label": "NVR",
+					"sm": 12,
+					"md": 2
+				},
+				"eventsEnabled": {
+					"type": "checkbox",
+					"label": "Event's",
+					"sm": 12,
+					"md": 2
+				},
+				"usersEnabled": {
+					"type": "checkbox",
+					"label": "Users",
+					"sm": 12,
+					"md": 2
+				},
 				"dividerMotionEvents": {
 					"newLine": true,
 					"type": "header",

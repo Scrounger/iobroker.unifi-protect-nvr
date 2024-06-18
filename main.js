@@ -347,45 +347,67 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.silly(`bootstrap: ${JSON.stringify(this.ufp.bootstrap)}`);
 
 				if (this.ufp.bootstrap.nvr) {
-					this.log.info(`${logPrefix}: Discovered ${this.ufp.bootstrap.nvr.modelKey}: ${this.ufp.getDeviceName(this.ufp.bootstrap.nvr, this.ufp.bootstrap.nvr.name)} (IP: ${this.ufp.bootstrap.nvr.host}, mac: ${this.ufp.bootstrap.nvr.mac}, id: ${this.ufp.bootstrap.nvr.id})`);
+					// perhaps needed for hasFeature stuff
 					this.devices.nvr = this.ufp.bootstrap.nvr;
 					this.devicesById[this.ufp.bootstrap.nvr.id] = this.devices.nvr;
 
-					if (isAdapterStart) {
-						await this.createNvrStates(this.ufp.bootstrap.nvr);
-					}
+					if (this.config.nvrEnabled) {
+						this.log.info(`${logPrefix}: Discovered ${this.ufp.bootstrap.nvr.modelKey}: ${this.ufp.getDeviceName(this.ufp.bootstrap.nvr, this.ufp.bootstrap.nvr.name)} (IP: ${this.ufp.bootstrap.nvr.host}, mac: ${this.ufp.bootstrap.nvr.mac}, id: ${this.ufp.bootstrap.nvr.id})`);
 
-					this.log.silly(`${logPrefix} devices.nvr: ${JSON.stringify(this.devices.nvr)}`);
+						if (isAdapterStart) {
+							await this.createNvrStates(this.ufp.bootstrap.nvr);
+						}
+
+						this.log.silly(`${logPrefix} devices.nvr: ${JSON.stringify(this.devices.nvr)}`);
+					} else {
+						if (isAdapterStart && await this.objectExists('nvr')) {
+							await this.delObjectAsync('nvr', { recursive: true });
+							this.log.info(`${logPrefix} NVR states deleted, because it's not enabled in the adapter configuration`);
+						}
+					}
 				}
 
 				// Add Cameras to List
 				if (this.ufp.bootstrap.cameras) {
-					for (const cam of this.ufp.bootstrap.cameras) {
-						this.log.info(`${logPrefix}: Discovered ${cam.modelKey}: ${this.ufp.getDeviceName(cam, cam.name)} (IP: ${cam.host}, mac: ${cam.mac}, id: ${cam.id}, state: ${cam.state})`);
-						this.devices.cameras[cam.mac] = cam;
-						this.devicesById[cam.id] = this.devices.cameras[cam.mac];
+					if (this.config.camerasEnabled) {
+						for (const cam of this.ufp.bootstrap.cameras) {
+							this.log.info(`${logPrefix}: Discovered ${cam.modelKey}: ${this.ufp.getDeviceName(cam, cam.name)} (IP: ${cam.host}, mac: ${cam.mac}, id: ${cam.id}, state: ${cam.state})`);
+							this.devices.cameras[cam.mac] = cam;
+							this.devicesById[cam.id] = this.devices.cameras[cam.mac];
 
-						if (isAdapterStart) {
-							await this.createCameraStates(cam);
+							if (isAdapterStart) {
+								await this.createCameraStates(cam);
+							}
+						}
+						this.log.silly(`${logPrefix} devices.cameras: ${JSON.stringify(this.devices.cameras)}`);
+					} else {
+						if (isAdapterStart && await this.objectExists('cameras')) {
+							await this.delObjectAsync('cameras', { recursive: true });
+							this.log.info(`${logPrefix} Camera states deleted, because it's not enabled in the adapter configuration`);
 						}
 					}
-					this.log.silly(`${logPrefix} devices.cameras: ${JSON.stringify(this.devices.cameras)}`);
 				}
 
 				// Add Users to List
 				if (this.ufp.bootstrap.users) {
-					for (const user of this.ufp.bootstrap.users) {
-						this.log.info(`${logPrefix}: Discovered ${user.modelKey}: ${user.name}`);
-						this.devices.users[user.id] = user;
+					if (this.config.usersEnabled) {
+						for (const user of this.ufp.bootstrap.users) {
+							this.log.info(`${logPrefix}: Discovered ${user.modelKey}: ${user.name}`);
+							this.devices.users[user.id] = user;
 
-						if (isAdapterStart) {
-							await this.createUserStates(user);
+							if (isAdapterStart) {
+								await this.createUserStates(user);
+							}
+						}
+						this.log.silly(`${logPrefix} devices.users: ${JSON.stringify(this.devices.users)}`);
+					} else {
+						if (isAdapterStart && await this.objectExists('users')) {
+							await this.delObjectAsync('users', { recursive: true });
+							this.log.info(`${logPrefix} User states deleted, because it's not enabled in the adapter configuration`);
 						}
 					}
-					this.log.silly(`${logPrefix} devices.users: ${JSON.stringify(this.devices.users)}`);
 				}
 			}
-
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -402,7 +424,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 			// this.log.warn(JSON.stringify(event));
 
-			if (event.header.modelKey === 'camera') {
+			if (this.config.camerasEnabled && event.header.modelKey === 'camera') {
 				const camId = event.header.id;
 				if (this.devicesById[camId]) {
 					await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
@@ -410,7 +432,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 				}
 			} else if (event.header.modelKey === 'event') {
-				if (this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
+				if (this.config.camerasEnabled && this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
 					const camId = event.header.recordId;
 
 					if (this.devicesById[camId]) {
@@ -420,9 +442,10 @@ class UnifiProtectNvr extends utils.Adapter {
 						this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 					}
 				}
-			} else if (event.header.modelKey === 'nvr') {
+			} else if (this.config.nvrEnabled && event.header.modelKey === 'nvr') {
 				await this.updateStates('nvr', undefined, this.devices.nvr, myDeviceTypes.nvr, event.payload);
-			} else if (event.header.modelKey === 'user') {
+
+			} else if (this.config.usersEnabled && event.header.modelKey === 'user') {
 				const userId = event.header.id;
 				await this.updateStates(userId, 'users', this.devices.users[userId], myDeviceTypes.users, event.payload);
 
@@ -727,6 +750,16 @@ class UnifiProtectNvr extends utils.Adapter {
 					icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
 				}
 
+				if (!await this.objectExists(`cameras`)) {
+					await this.extendObject(`cameras`, {
+						type: 'device',
+						common: {
+							name: 'Camera\'s',
+							icon: myDeviceImages.Cameras
+						}
+					});
+				}
+
 				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
 					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - creating channel '${cam.mac}' for camera '${this.ufp.getDeviceName(cam, cam.name)}'`);
@@ -766,6 +799,15 @@ class UnifiProtectNvr extends utils.Adapter {
 					name: user.name
 				}
 
+				if (!await this.objectExists(`users`)) {
+					await this.extendObject(`users`, {
+						type: 'device',
+						common: {
+							name: 'User\'s',
+							icon: myDeviceImages.Users
+						}
+					});
+				}
 
 				if (!await this.objectExists(`users.${user.id}`)) {
 					// create user channel
@@ -870,9 +912,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							} else {
 								if (!Object.prototype.hasOwnProperty.call(deviceTypes[id], 'id')) {
 									// only report it if it's not a custom defined state
-									if (this.log.level === 'debug') {
-										this.log.warn(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated / used in the Unifi Protect application or will update by an event)`);
-									}
+									this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - property '${logMsgState}' not exists in bootstrap values (sometimes this option may first need to be activated / used in the Unifi Protect application or will update by an event)`);
 								}
 							}
 						} else {
