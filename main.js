@@ -989,9 +989,16 @@ class UnifiProtectNvr extends utils.Adapter {
 					// if we have a custom state, use defined id
 					stateId = deviceTypes[id].id;
 				}
-
-				const hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
 				const logMsgState = '.' + `${channel}.${stateId}`.split('.')?.slice(1)?.join('.');
+				let hasFeature = true;
+
+				if (deviceTypes[id].hasFeature.startsWith('nvr.')) {
+					// feature check must be done on NVR
+					hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature.replace('nvr.', ''), this.devices.nvr);
+				} else {
+					// feature check must be done on device it self
+					hasFeature = myHelper.getObjectByString(deviceTypes[id].hasFeature, objOrg);
+				}
 
 				if (!hasFeature) {
 					if (await this.objectExists(`${channel}.${stateId}`)) {
