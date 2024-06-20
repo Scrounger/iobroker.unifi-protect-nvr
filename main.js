@@ -380,6 +380,15 @@ class UnifiProtectNvr extends utils.Adapter {
 							}
 						}
 						this.log.silly(`${logPrefix} devices.cameras: ${JSON.stringify(this.devices.cameras)}`);
+
+						if (this.config.motionEventsEnabled && this.config.motionEventsHistoryEnabled) {
+							await this.createMotionHistoryChannels();
+						} else {
+							if (isAdapterStart && await this.objectExists('events.motion')) {
+								await this.delObjectAsync('events.motion', { recursive: true });
+								this.log.info(`${logPrefix} Motion event states deleted, because it's not enabled in the adapter configuration`);
+							}
+						}
 					} else {
 						if (isAdapterStart && await this.objectExists('cameras')) {
 							await this.delObjectAsync('cameras', { recursive: true });
@@ -494,6 +503,10 @@ class UnifiProtectNvr extends utils.Adapter {
 						// set custom states - using eventStore because conversions may be defined here
 						this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id]);
 
+						if (this.config.motionEventsHistoryEnabled) {
+							this.setCustomMotionEventStates('events.motion', cam, this.eventStore.cameras[header.id], false, true);
+						}
+
 						// reset snapshot at beginning of motion event
 						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.defaultImage.snapshot, true);
 
@@ -535,6 +548,10 @@ class UnifiProtectNvr extends utils.Adapter {
 
 								if (this.config.motionThumbAnimated)
 									this.getEventAnimatedThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, header.id, this.config.motionThumbAnimatedWidth, this.config.motionThumbAnimatedHeight, this.config.motionThumbAnimatedSpeedUp);
+
+								if (this.config.motionEventsHistoryEnabled) {
+									this.setCustomMotionEventStates('events.motion', cam, this.eventStore.cameras[header.id], true, true);
+								}
 
 								delete this.eventStore.cameras[header.id];
 							}
@@ -830,6 +847,49 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 
 				await this.createGenericState(`users.${user.id}`, myDeviceTypes.users, user, 'users', user);
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+	async createMotionHistoryChannels() {
+		const logPrefix = '[createMotionHistoryChannels]:';
+
+		try {
+			const common = {
+				name: 'Motions Event\'s',
+				// icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
+			}
+
+			if (!await this.objectExists(`events`)) {
+				await this.extendObject(`events`, {
+					type: 'device',
+					common: {
+						name: 'Event\'s History',
+						// icon: myDeviceImages.Cameras
+					}
+				});
+			}
+
+			if (!await this.objectExists(`events.motion`)) {
+				// create cam channel
+				this.log.debug(`${logPrefix} creating channel 'events.motion'`);
+
+				await this.setObjectAsync(`events.motion`, {
+					type: 'channel',
+					common: common,
+					native: {}
+				});
+			} else {
+				const obj = await this.getObjectAsync(`events.motion`);
+
+				if (obj && obj.common) {
+					if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+						await this.extendObject(`events.motion`, { common: common });
+						this.log.debug(`${logPrefix} channel updated '.events.motion'`);
+					}
+				}
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -1228,17 +1288,62 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectKnownDeviceTypes} cam
 	 * @param {object} eventStoreObj
 	 */
-	async setCustomMotionEventStates(channelId, cam, eventStoreObj, onlyChanges = false) {
+	async setCustomMotionEventStates(channelId, cam, eventStoreObj, onlyChanges = false, isHistory = false) {
 		const logPrefix = '[setCustomMotionEventStates]:';
 
 		try {
+			if (isHistory) {
+				// create Channel for movtion event history
+				const idChannel = `${channelId}.${eventStoreObj.lastMotionEventId}`;
+
+				if (!await this.objectExists(idChannel)) {
+					await this.setObjectAsync(idChannel, {
+						type: 'channel',
+						common: {
+							name: cam.name,
+							desc: `→ ${this.namespace}.cameras.${cam.mac}`
+						},
+						native: {}
+					});
+
+					// add addtional information to event, so that states for this can be created
+					eventStoreObj.name = cam.name;
+					eventStoreObj.mac = cam.mac;
+
+					this.log.debug(`${logPrefix} ${eventStoreObj.lastMotionEventId} - creating channel for event '.${idChannel}'`);
+				}
+			}
+
 			for (const key in eventStoreObj) {
 				if (Object.prototype.hasOwnProperty.call(myDeviceTypes.cameras, key)) {
-					const id = `${channelId}.${cam.mac}.${myDeviceTypes.cameras[key].id}`;
+
 					const val = myDeviceTypes.cameras[key].convertVal ? myDeviceTypes.cameras[key].convertVal(eventStoreObj[key]) : eventStoreObj[key];
 
-					await this.setStateExists(id, val, onlyChanges);
-					this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(cam)}, eventId: ${eventStoreObj.eventId} - update state '${id}': ${val}`);
+					if (isHistory) {
+						const id = `${channelId}.${eventStoreObj.lastMotionEventId}.${(myDeviceTypes.cameras[key].id || key).replace('lastMotion.', '')}`;
+						let logMsgState = `.${id}`;
+
+						if (!await this.objectExists(id)) {
+							const obj = {
+								type: 'state',
+								common: await this.getCommonGenericState(key, myDeviceTypes.cameras, cam, logMsgState),
+								native: {}
+							};
+
+							// @ts-ignore
+							await this.setObjectAsync(id, obj);
+
+							this.log.debug(`${logPrefix} ${eventStoreObj.lastMotionEventId} - create state for event '.${id}': ${val}`);
+						}
+
+						await this.setStateExists(id, val, onlyChanges);
+						this.log.silly(`${logPrefix} - ${eventStoreObj.lastMotionEventId} - update event state '${id}': ${val}`);
+					} else {
+						const id = `${channelId}.${cam.mac}.${myDeviceTypes.cameras[key].id}`;
+
+						await this.setStateExists(id, val, onlyChanges);
+						this.log.silly(`${logPrefix} ${this.ufp?.getDeviceName(cam)}, eventId: ${eventStoreObj.lastMotionEventId} - update state '${id}': ${val}`);
+					}
 				}
 			}
 		} catch (error) {
