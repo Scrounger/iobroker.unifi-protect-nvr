@@ -1183,12 +1183,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							if (dirCams !== null) {
 								for (const file of dirCams) {
-									const diff = moment().diff(moment(file.file, this.fileNameFormat), 'days');
+									const diff = moment().diff(moment(file.file, this.fileNameFormat), 'minutes');
 
-									if (diff >= this.config.manualSnapshotRetention) {
+									if (diff / 1440 >= this.config.manualSnapshotRetention) {
 										const fileName = `${this.storagePaths.snapshotCameras}${dir.file}/${file.file}`;
 										this.delFileAsync(this.namespace, fileName);
-										this.log.info(`${logPrefix} snapshot '${fileName}' deleted, because it's ${diff} days old`);
+										this.log.info(`${logPrefix} snapshot '${fileName}' deleted, because it's ${(diff / 1440).toFixed(2)} days old`);
 									}
 								}
 							}
@@ -1202,11 +1202,11 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				for (const id in eventChannels) {
 					if (eventChannels[id] && eventChannels[id].val) {
-						const diff = moment().diff(moment(eventChannels[id].val), 'hours');
+						const diff = moment().diff(moment(eventChannels[id].val), 'minutes');
 
-						if (diff > this.config.motionEventsHistoryRetention) {
+						if (diff / 60 > this.config.motionEventsHistoryRetention) {
 							await this.delObjectAsync(myHelper.getIdWithoutLastPart(id), { recursive: true });
-							this.log.info(`${logPrefix} motion event '${myHelper.getIdWithoutLastPart(id)}' deleted, because it's ${diff} hours old`);
+							this.log.info(`${logPrefix} motion event '${myHelper.getIdWithoutLastPart(id)}' deleted, because it's ${(diff / 60).toFixed(2)} hours old`);
 						}
 					}
 				}
