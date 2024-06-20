@@ -91,7 +91,7 @@
 					"disabled": "!data.camerasEnabled || !data.motionEventsEnabled || !data.motionEventsHistoryEnabled",
 					"min": 0,
 					"sm": 12,
-					"md": 2
+					"md": 3
 				},
 				"motionSnapshot": {
 					"type": "checkbox",

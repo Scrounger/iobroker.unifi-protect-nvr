@@ -1204,8 +1204,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					if (eventChannels[id] && eventChannels[id].val) {
 						const diff = moment().diff(moment(eventChannels[id].val), 'hours');
 
-						if (diff >= this.config.motionEventsHistoryRetention) {
-							await this.delStateAsync(myHelper.getIdWithoutLastPart(id));
+						if (diff > this.config.motionEventsHistoryRetention) {
+							await this.delObjectAsync(myHelper.getIdWithoutLastPart(id), { recursive: true });
 							this.log.info(`${logPrefix} motion event '${myHelper.getIdWithoutLastPart(id)}' deleted, because it's ${diff} hours old`);
 						}
 					}
