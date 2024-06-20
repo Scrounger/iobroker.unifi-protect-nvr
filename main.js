@@ -727,7 +727,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				const common = {
 					name: this.ufp.getDeviceName(nvr, nvr.name),
 					icon: myDeviceImages[nvr.marketName] ? myDeviceImages[nvr.marketName] : null
-				}
+				};
 
 				if (!await this.objectExists(`nvr`)) {
 					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - creating channel '${nvr.id}' for nvr '${this.ufp.getDeviceName(nvr, nvr.name)}'`);
@@ -765,7 +765,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				const common = {
 					name: this.ufp.getDeviceName(cam, cam.name),
 					icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
-				}
+				};
 
 				if (!await this.objectExists(`cameras`)) {
 					await this.extendObject(`cameras`, {
@@ -814,7 +814,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			if (this.ufp) {
 				const common = {
 					name: user.name
-				}
+				};
 
 				if (!await this.objectExists(`users`)) {
 					await this.extendObject(`users`, {
@@ -860,7 +860,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			const common = {
 				name: 'Motions Event\'s',
 				// icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
-			}
+			};
 
 			if (!await this.objectExists(`events`)) {
 				await this.extendObject(`events`, {
@@ -994,7 +994,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 								const common = {
 									name: Object.prototype.hasOwnProperty.call(deviceTypes[id], 'name') ? deviceTypes[id].name : id
-								}
+								};
 
 								if (!await this.objectExists(`${channel}.${id}`)) {
 									// create channel
@@ -1336,7 +1336,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 					if (isHistory) {
 						const id = `${channelId}.${eventStoreObj.lastMotionEventId}.${(myDeviceTypes.cameras[key].id || key).replace('lastMotion.', '')}`;
-						let logMsgState = `.${id}`;
+						const logMsgState = `.${id}`;
 
 						if (!await this.objectExists(id)) {
 							const obj = {
