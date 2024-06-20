@@ -1195,16 +1195,31 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					}
 				}
-
-				if (this.retentionTimeout) {
-					this.clearTimeout(this.retentionTimeout);
-					this.retentionTimeout = null;
-				}
-
-				this.retentionTimeout = this.setTimeout(() => {
-					this.retentionManager();
-				}, 60 * 60 * 1000);
 			}
+
+			if (this.config.motionEventsHistoryEnabled && this.config.motionEventsHistoryRetention > 0) {
+				const eventChannels = await this.getStatesAsync('events.motion.*.start');
+
+				for (const id in eventChannels) {
+					if (eventChannels[id] && eventChannels[id].val) {
+						const diff = moment().diff(moment(eventChannels[id].val), 'hours');
+
+						if (diff >= this.config.motionEventsHistoryRetention) {
+							await this.delStateAsync(myHelper.getIdWithoutLastPart(id));
+							this.log.info(`${logPrefix} motion event '${myHelper.getIdWithoutLastPart(id)}' deleted, because it's ${diff} hours old`);
+						}
+					}
+				}
+			}
+
+			if (this.retentionTimeout) {
+				this.clearTimeout(this.retentionTimeout);
+				this.retentionTimeout = null;
+			}
+
+			this.retentionTimeout = this.setTimeout(() => {
+				this.retentionManager();
+			}, 60 * 60 * 1000);
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
