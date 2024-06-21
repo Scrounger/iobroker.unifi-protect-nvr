@@ -497,30 +497,28 @@ class UnifiProtectNvr extends utils.Adapter {
 							lastMotionScore: payload.score ? payload.score : 0,
 							lastMotionSmartTypes: payload.smartDetectTypes && payload.smartDetectTypes.length > 0 ? payload.smartDetectTypes : ['none'],
 							lastMotionStart: payload.start,
-							lastMotionEnd: null
+							lastMotionEnd: null,
+							lastMotionSnapshot: this.config.motionSnapshot ? this.defaultImage.snapshot : null,
+							lastMotionThumbnail: this.config.motionThumb ? this.defaultImage.thumbnail : null,
+							lastMotionThumbnailAnimated: this.config.motionThumbAnimated ? this.defaultImage.thumbnailAnimated : null
 						};
 
 						// set custom states - using eventStore because conversions may be defined here
 						this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id]);
 
 						if (this.config.motionEventsHistoryEnabled) {
-							this.setCustomMotionEventStates('events.motion', cam, this.eventStore.cameras[header.id], false, true);
+							this.setCustomMotionEventStates('events.motion', cam, this.eventStore.cameras[header.id], true, true);
 						}
-
-						// reset snapshot at beginning of motion event
-						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.defaultImage.snapshot, true);
-
-						// reset thumbnail at beginning of motion event
-						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, this.defaultImage.thumbnail, true);
-
-						// reset thumbnail animated at beginning of motion event
-						this.setStateExists(`${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, this.defaultImage.thumbnailAnimated, true);
 
 						// Snapshot Delay configured
 						if (this.config.motionSnapshot && this.config.motionSnapshotDelay >= 0 && !this.eventStore.cameras[header.id].snapshotTaken) {
 							setTimeout(() => {
-								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true);
+								delete this.eventStore.cameras[header.id].lastMotionSnapshot;	// delete from object to prevent override with default image
+
+								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true,
+									this.config.motionEventsHistoryEnabled, `events.motion.${header.id}.${myDeviceTypes.cameras.lastMotionSnapshot.id.replace('lastMotion.', '')}`);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
+
 							}, this.config.motionSnapshotDelay * 1000);
 						}
 					} else {
@@ -532,8 +530,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							// Snapshot configured -1 = auto
 							if (this.config.motionSnapshot && this.config.motionSnapshotDelay === -1 && !this.eventStore.cameras[header.id].snapshotTaken) {
-								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true);
+								delete this.eventStore.cameras[header.id].lastMotionSnapshot;	// delete from object to prevent override with default image
+
+								this.getSnapshot(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionSnapshot.id}`, this.config.motionSnapshotWidth, this.config.motionSnapshotHeight, true,
+									this.config.motionEventsHistoryEnabled, `events.motion.${header.id}.${myDeviceTypes.cameras.lastMotionSnapshot.id.replace('lastMotion.', '')}`);
 								this.eventStore.cameras[header.id].snapshotTaken = true;
+
 							}
 
 							// Motion event finished -> paylod have 'metadata.detectedThumbnails'
@@ -543,11 +545,19 @@ class UnifiProtectNvr extends utils.Adapter {
 								// set custom states - using eventStore because conversions may be defined here
 								this.setCustomMotionEventStates('cameras', cam, this.eventStore.cameras[header.id], true);
 
-								if (this.config.motionThumb)
-									this.getEventThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight);
+								if (this.config.motionThumb) {
+									delete this.eventStore.cameras[header.id].lastMotionThumbnail;	// delete from object to prevent override with default image
 
-								if (this.config.motionThumbAnimated)
-									this.getEventAnimatedThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, header.id, this.config.motionThumbAnimatedWidth, this.config.motionThumbAnimatedHeight, this.config.motionThumbAnimatedSpeedUp);
+									this.getEventThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnail.id}`, header.id, this.config.motionThumbWidth, this.config.motionThumbHeight,
+										this.config.motionEventsHistoryEnabled, `events.motion.${header.id}.${myDeviceTypes.cameras.lastMotionThumbnail.id.replace('lastMotion.', '')}`);
+								}
+
+								if (this.config.motionThumbAnimated) {
+									delete this.eventStore.cameras[header.id].lastMotionThumbnailAnimated;	// delete from object to prevent override with default image
+
+									this.getEventAnimatedThumb(cam, `${camMac}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id}`, header.id, this.config.motionThumbAnimatedWidth, this.config.motionThumbAnimatedHeight, this.config.motionThumbAnimatedSpeedUp,
+										this.config.motionEventsHistoryEnabled, `events.motion.${header.id}.${myDeviceTypes.cameras.lastMotionThumbnailAnimated.id.replace('lastMotion.', '')}`);
+								}
 
 								if (this.config.motionEventsHistoryEnabled) {
 									this.setCustomMotionEventStates('events.motion', cam, this.eventStore.cameras[header.id], true, true);
@@ -570,7 +580,17 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async getEventThumb(cam, targetId, eventId, width, height) {
+	/**
+	 * 
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
+	 * @param {string} targetId 
+	 * @param {string} eventId 
+	 * @param {number} width 
+	 * @param {number} height 
+	 * @param {boolean} isHistorieEnabled 
+	 * @param {string | undefined} historyId 
+	 */
+	async getEventThumb(cam, targetId, eventId, width, height, isHistorieEnabled = false, historyId = undefined) {
 		if (this.ufp && this.isConnected) {
 			const logPrefix = `[getEventThumb]: ${this.ufp.getDeviceName(cam)} - `;
 
@@ -587,7 +607,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						this.log.debug(`${logPrefix} thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
-						await this.setStateExists(targetId, base64ImgString);
+						this.setStateExists(targetId, base64ImgString);
+
+						if (isHistorieEnabled && historyId) {
+							this.setStateExists(historyId, base64ImgString);
+							this.log.debug(`${logPrefix} thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
+						}
 					} else {
 						this.log.error(`${logPrefix} response code: ${response.status}`);
 					}
@@ -601,7 +626,18 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	async getEventAnimatedThumb(cam, targetId, eventId, width, height, speedup) {
+	/**
+	 * 
+	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
+	 * @param {string} targetId 
+	 * @param {string} eventId 
+	 * @param {number} width 
+	 * @param {number} height 
+	 * @param {number} speedup 
+	 * @param {boolean} isHistorieEnabled 
+	 * @param {string | undefined} historyId 
+	 */
+	async getEventAnimatedThumb(cam, targetId, eventId, width, height, speedup, isHistorieEnabled = false, historyId = undefined) {
 		if (this.ufp && this.isConnected) {
 			const logPrefix = `[getEventAnimatedThumb]: ${this.ufp.getDeviceName(cam)} - `;
 
@@ -618,7 +654,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						this.log.debug(`${logPrefix} animated thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
-						await this.setStateExists(targetId, base64ImgString);
+						this.setStateExists(targetId, base64ImgString);
+
+						if (isHistorieEnabled && historyId) {
+							this.setStateExists(historyId, base64ImgString);
+							this.log.debug(`${logPrefix} animated thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
+						}
 					} else {
 						this.log.error(`${logPrefix} response code: ${response.status}`);
 					}
@@ -638,8 +679,10 @@ class UnifiProtectNvr extends utils.Adapter {
 	 * @param {number} width
 	 * @param {number} height
 	 * @param {boolean} base64Image
+	 * @param {boolean} isHistorieEnabled
+	 * @param {string | undefined} historyId
 	 */
-	async getSnapshot(cam, targetId, width, height, base64Image = false) {
+	async getSnapshot(cam, targetId, width, height, base64Image = false, isHistorieEnabled = false, historyId = undefined) {
 		if (this.ufp && this.isConnected) {
 			const logPrefix = `[getSnapshot]: ${this.ufp.getDeviceName(cam)} - `;
 
@@ -654,7 +697,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						this.log.debug(`${logPrefix} snapshot successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
 
-						await this.setStateExists(targetId, base64ImgString);
+						this.setStateExists(targetId, base64ImgString);
+
+						if (isHistorieEnabled && historyId) {
+							this.setStateExists(historyId, base64ImgString);
+							this.log.debug(`${logPrefix} snapshot successfully stored in state '.${historyId.split('.')?.slice(1)?.join('.')}'`);
+						}
 					} else {
 						const filename = `${this.storagePaths.snapshotCameras}${cam.displayName.replaceAll(' ', '_')}_${cam.mac}/${now.format(this.fileNameFormat)}.png`;
 
@@ -1308,7 +1356,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (isHistory) {
-				// create Channel for movtion event history
+				// create Channel for motion event history
 				const idChannel = `${channelId}.${eventStoreObj.lastMotionEventId}`;
 
 				if (!await this.objectExists(idChannel)) {
@@ -1325,7 +1373,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					eventStoreObj.name = cam.name;
 					eventStoreObj.mac = cam.mac;
 
-					this.log.debug(`${logPrefix} ${eventStoreObj.lastMotionEventId} - creating channel for event '.${idChannel}'`);
+					this.log.silly(`${logPrefix} ${eventStoreObj.lastMotionEventId} - creating channel for event '.${idChannel}'`);
 				}
 			}
 
@@ -1348,7 +1396,7 @@ class UnifiProtectNvr extends utils.Adapter {
 							// @ts-ignore
 							await this.setObjectAsync(id, obj);
 
-							this.log.debug(`${logPrefix} ${eventStoreObj.lastMotionEventId} - create state for event '.${id}': ${val}`);
+							this.log.silly(`${logPrefix} ${eventStoreObj.lastMotionEventId} - create state for event '.${id}': ${val}`);
 						}
 
 						await this.setStateExists(id, val, onlyChanges);
