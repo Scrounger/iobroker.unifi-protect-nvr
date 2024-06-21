@@ -9,12 +9,12 @@
 				"dividerCredentials": {
 					"newLine": true,
 					"type": "header",
-					"text": "credentials",
+					"text": "login data",
 					"size": 2
 				},
 				"host": {
 					"type": "text",
-					"label": "IP Adress / Hostname",
+					"label": "host",
 					"newLine": true,
 					"sm": 12,
 					"md": 2
@@ -33,10 +33,10 @@
 				},
 				"stateChangeRetryDelay": {
 					"type": "number",
-					"label": "State Change Retry Delay [s]",
+					"label": "stateChangeRetryDelay",
 					"min": 0,
 					"sm": 12,
-					"md": 2
+					"md": 3
 				},
 				"dividerStates": {
 					"newLine": true,
