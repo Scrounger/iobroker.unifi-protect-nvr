@@ -611,7 +611,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						if (isHistorieEnabled && historyId) {
 							this.setStateExists(historyId, base64ImgString);
-							this.log.debug(`${logPrefix} thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
+							this.log.debug(`${logPrefix} thumb successfully stored in state '.${historyId.split('.')?.slice(1)?.join('.')}'`);
 						}
 					} else {
 						this.log.error(`${logPrefix} response code: ${response.status}`);
@@ -658,7 +658,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						if (isHistorieEnabled && historyId) {
 							this.setStateExists(historyId, base64ImgString);
-							this.log.debug(`${logPrefix} animated thumb successfully stored in state '.${targetId.split('.')?.slice(1)?.join('.')}'`);
+							this.log.debug(`${logPrefix} animated thumb successfully stored in state '.${historyId.split('.')?.slice(1)?.join('.')}'`);
 						}
 					} else {
 						this.log.error(`${logPrefix} response code: ${response.status}`);
