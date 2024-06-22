@@ -130,6 +130,15 @@ class UnifiProtectNvr extends utils.Adapter {
 
 			this.retentionManager();
 
+			// setTimeout(async () => {
+			// 	let ls = this.ufp?.createLivestream();
+
+			// 	let res = await ls?.start('66746dee032d0803e4000519', 0)
+
+			// 	this.log.warn(res);
+			// 	// this.log.warn(JSON.stringify(ls));
+			// }, 5000);
+
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -422,7 +431,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/**
+	/** ufp Api Event Handler
 	 @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectEventPacket} event
 	 */
 	async onProtectEvent(event) {
@@ -438,7 +447,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (this.devicesById[camId]) {
 					await this.updateStates(this.devicesById[camId].mac, 'cameras', this.devicesById[camId], myDeviceTypes.cameras, event.payload);
 				} else {
-					this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
+					if (event && event.payload && event.payload.type)
+						this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 				}
 			} else if (event.header.modelKey === 'event') {
 				if (this.config.camerasEnabled && this.config.motionEventsEnabled && event.header.recordModel === 'camera') {
@@ -448,7 +458,8 @@ class UnifiProtectNvr extends utils.Adapter {
 						const cam = this.devicesById[event.header.recordId];
 						this.onCamMotionEvent(cam, event.header, event.payload);
 					} else {
-						this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
+						if (event && event.payload && event.payload.type)
+							this.log.warn(`${logPrefix} unknown device (id: ${camId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
 					}
 				}
 			} else if (this.config.nvrEnabled && event.header.modelKey === 'nvr') {
@@ -467,7 +478,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/**
+	/** Camera Motion Event Handler
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
 	 * @param {{ action?: string; id: any; modelKey?: string; newUpdateId?: string; mac?: string | undefined; nvrMac?: string | undefined; recordModel?: string | undefined; recordId?: string | undefined; }} header
 	 * @param {object} payload
@@ -580,8 +591,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/**
-	 * 
+	/** get thumb of motion event
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
 	 * @param {string} targetId 
 	 * @param {string} eventId 
@@ -626,8 +636,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/**
-	 * 
+	/** get animated thumb of motion event
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
 	 * @param {string} targetId 
 	 * @param {string} eventId 
