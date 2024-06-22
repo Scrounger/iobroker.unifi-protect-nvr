@@ -774,7 +774,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			if (this.ufp) {
 				const common = {
 					name: this.ufp.getDeviceName(nvr, nvr.name),
-					icon: myDeviceImages[nvr.marketName] ? myDeviceImages[nvr.marketName] : null
+					icon: myDeviceImages[nvr.type] ? myDeviceImages[nvr.type] : null
 				};
 
 				if (!await this.objectExists(`nvr`)) {
@@ -810,11 +810,6 @@ class UnifiProtectNvr extends utils.Adapter {
 
 		try {
 			if (this.ufp) {
-				const common = {
-					name: this.ufp.getDeviceName(cam, cam.name),
-					icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
-				};
-
 				if (!await this.objectExists(`cameras`)) {
 					await this.extendObject(`cameras`, {
 						type: 'device',
@@ -824,6 +819,11 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					});
 				}
+
+				const common = {
+					name: this.ufp.getDeviceName(cam, cam.name),
+					icon: myDeviceImages[cam.type] ? myDeviceImages[cam.type] : null
+				};
 
 				if (!await this.objectExists(`cameras.${cam.mac}`)) {
 					// create cam channel
@@ -905,20 +905,20 @@ class UnifiProtectNvr extends utils.Adapter {
 		const logPrefix = '[createMotionHistoryChannels]:';
 
 		try {
-			const common = {
-				name: 'Motions Event\'s',
-				// icon: myDeviceImages[cam.marketName] ? myDeviceImages[cam.marketName] : null
-			};
-
 			if (!await this.objectExists(`events`)) {
 				await this.extendObject(`events`, {
 					type: 'device',
 					common: {
 						name: 'Event\'s History',
-						// icon: myDeviceImages.Cameras
+						icon: myDeviceImages.Events
 					}
 				});
 			}
+
+			const common = {
+				name: 'Motions Event\'s',
+				icon: myDeviceImages.Motion
+			};
 
 			if (!await this.objectExists(`events.motion`)) {
 				// create cam channel
@@ -1012,8 +1012,8 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							if (objValues && Object.prototype.hasOwnProperty.call(objValues, id)) {
 								// write current val to state
-								if (deviceTypes[id].convertVal) {
-									await this.setStateChangedAsync(`${channel}.${stateId}`, deviceTypes[id].convertVal(objValues[id]), true);
+								if (deviceTypes[id].readVal) {
+									await this.setStateChangedAsync(`${channel}.${stateId}`, deviceTypes[id].readVal(objValues[id]), true);
 								} else {
 									await this.setStateChangedAsync(`${channel}.${stateId}`, objValues[id], true);
 								}
@@ -1183,7 +1183,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				if (deviceTypes[key]) {
 					if (Object.prototype.hasOwnProperty.call(deviceTypes[key], 'iobType')) {
 						const id = `${idParentDevice ? `${idParentDevice}.` : ''}${idDevice}${idPrefix}.${key}`;
-						const val = deviceTypes[key].convertVal ? deviceTypes[key].convertVal(payload[key]) : payload[key];
+						const val = deviceTypes[key].readVal ? deviceTypes[key].readVal(payload[key]) : payload[key];
 
 						if (this.log.level === 'silly') {
 							const oldState = await this.getStateAsync(id);
@@ -1382,7 +1382,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			for (const key in eventStoreObj) {
 				if (Object.prototype.hasOwnProperty.call(myDeviceTypes.cameras, key)) {
 
-					const val = myDeviceTypes.cameras[key].convertVal ? myDeviceTypes.cameras[key].convertVal(eventStoreObj[key]) : eventStoreObj[key];
+					const val = myDeviceTypes.cameras[key].readVal ? myDeviceTypes.cameras[key].readVal(eventStoreObj[key]) : eventStoreObj[key];
 
 					if (isHistory) {
 						const id = `${channelId}.${eventStoreObj.lastMotionEventId}.${(myDeviceTypes.cameras[key].id || key).replace('lastMotion.', '')}`;
