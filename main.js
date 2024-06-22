@@ -1101,8 +1101,16 @@ class UnifiProtectNvr extends utils.Adapter {
 				read: deviceTypes[id].read ? deviceTypes[id].read : true,
 				write: deviceTypes[id].write ? deviceTypes[id].write : false,
 				role: deviceTypes[id].role ? deviceTypes[id].role : 'state',
-				unit: deviceTypes[id].unit ? deviceTypes[id].unit : ''
 			};
+
+			if (deviceTypes[id].unit) common.unit = deviceTypes[id].unit;
+
+			if (deviceTypes[id].min || deviceTypes[id].min === 0) common.min = deviceTypes[id].min;
+
+			if (deviceTypes[id].max || deviceTypes[id].max === 0) common.max = deviceTypes[id].max;
+
+			if (deviceTypes[id].step) common.step = deviceTypes[id].step;
+
 
 			if (deviceTypes[id].states) {
 				common.states = deviceTypes[id].states;
@@ -1113,13 +1121,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - set allowed common.states for '${logMsgState}' (from: ${deviceTypes[id].statesFromProperty})`);
 			}
 
-			if (deviceTypes[id].min || deviceTypes[id].min === 0) {
-				common.min = deviceTypes[id].min;
-			}
-
-			if (deviceTypes[id].max || deviceTypes[id].max === 0) {
-				common.max = deviceTypes[id].max;
-			}
+			if (deviceTypes[id].desc) common.desc = deviceTypes[id].desc;
 
 			return common;
 		} catch (error) {

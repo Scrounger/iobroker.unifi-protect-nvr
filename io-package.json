@@ -180,7 +180,7 @@
     "usersEnabled": false,
     "motionEventsEnabled": true,
     "motionEventsHistoryEnabled": false,
-    "motionEventsHistoryRetention": 48,
+    "motionEventsHistoryRetention": 24,
     "motionSnapshot": false,
     "motionSnapshotWidth": 1280,
     "motionSnapshotHeight": 720,
