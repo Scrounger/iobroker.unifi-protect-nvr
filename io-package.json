@@ -270,6 +270,51 @@
       },
       {
         "id": "cameras.recordingSettings.smartDetectPostPaddingSecs"
+      },
+      {
+        "id": "nvr.hostShortname"
+      },
+      {
+        "id": "nvr.id"
+      },
+      {
+        "id": "nvr.hostShortname"
+      },
+      {
+        "id": "nvr.mac"
+      },
+      {
+        "id": "nvr.marketName"
+      },
+      {
+        "id": "nvr.lastSeen"
+      },
+      {
+        "id": "nvr.upSince"
+      },
+      {
+        "id": "nvr.version"
+      },
+      {
+        "id": "nvr.cameraCapacity"
+      },
+      {
+        "id": "nvr.systemInfo.cpu"
+      },
+      {
+        "id": "nvr.systemInfo.memory"
+      },
+      {
+        "id": "users.id"
+      },
+      {
+        "id": "users.localUsername"
+      },
+      {
+        "id": "users.location.latitude"
+      },
+      {
+        "id": "users.location.longitude"
       }
     ]
   },
