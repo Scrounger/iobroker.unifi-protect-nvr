@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0-alpha.6",
+    "version": "1.0.0-alpha.7",
     "news": {
+      "1.0.0-alpha.7": {
+        "en": "work in progress",
+        "de": "arbeit im laufenden",
+        "ru": "работа",
+        "pt": "trabalho em andamento",
+        "nl": "lopende werkzaamheden",
+        "fr": "travaux en cours",
+        "it": "lavori in corso",
+        "es": "en curso",
+        "pl": "prace w toku",
+        "uk": "робота в прогресі",
+        "zh-cn": "进行中的工作"
+      },
       "1.0.0-alpha.6": {
         "en": "work in progress",
         "de": "arbeit im laufenden",
@@ -80,19 +93,6 @@
         "pl": "fix testowy",
         "uk": "фіксатор тестування",
         "zh-cn": "测试修正"
-      },
-      "1.0.0-alpha.0": {
-        "en": "initial release",
-        "de": "erstausstrahlung",
-        "ru": "первоначальный выпуск",
-        "pt": "lançamento inicial",
-        "nl": "eerste release",
-        "fr": "libération initiale",
-        "it": "rilascio iniziale",
-        "es": "liberación inicial",
-        "pl": "początkowe zwolnienie",
-        "uk": "початковий реліз",
-        "zh-cn": "初步释放"
       }
     },
     "title": "Unifi Protect NVR",
