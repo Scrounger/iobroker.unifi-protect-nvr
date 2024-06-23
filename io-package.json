@@ -254,6 +254,9 @@
         "id": "cameras.state"
       },
       {
+        "id": "cameras.videoMode"
+      },
+      {
         "id": "cameras.recordingSettings.inScheduleMode"
       },
       {
