@@ -23,7 +23,7 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^3.1.4",
+    "@iobroker/adapter-core": "^3.1.6",
     "unifi-protect": "^4.11.1",
     "moment": "^2.30.1"
   },
