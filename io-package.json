@@ -197,6 +197,9 @@
     "manualSnapshotRetention": 10,
     "blacklistedStates": [
       {
+        "id": "cameras.channels"
+      },
+      {
         "id": "cameras.eventStats"
       },
       {

@@ -53,6 +53,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			'cameraPowerCycling'
 		];
 
+		this.ufpLiveStream = {}
+
 		this.devices = {
 			nvr: {},
 			cameras: {},
@@ -130,15 +132,6 @@ class UnifiProtectNvr extends utils.Adapter {
 
 			this.retentionManager();
 
-			// setTimeout(async () => {
-			// 	let ls = this.ufp?.createLivestream();
-
-			// 	let res = await ls?.start('66746dee032d0803e4000519', 0)
-
-			// 	this.log.warn(res);
-			// 	// this.log.warn(JSON.stringify(ls));
-			// }, 5000);
-
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
@@ -201,6 +194,25 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						if (id.includes(myDeviceTypes.cameras.takeSnapshot.id)) {
 							this.getSnapshot(this.devices.cameras[camMac], `cameras.${camMac}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
+
+							// } else if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id) || id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStop.id)) {
+							// 	const camId = this.devices.cameras[camMac].id;
+
+							// 	this.ufpLiveStream[camId] = this.ufp.createLivestream();
+
+							// 	if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id)) {
+							// 		let res = await this.ufpLiveStream[camId].start(camId, 0);
+
+							// 		if (res) {
+							// 			this.log.warn(this.ufpLiveStream[camId].ws._url);
+							// 			this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStart.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), this.ufpLiveStream[camId].ws._url, true);
+							// 		}
+							// 	} else {
+							// 		this.log.warn('stop!');
+							// 		await this.ufpLiveStream[camId].stop();
+							// 		this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStop.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), null, true);
+							// 	}
+
 						} else {
 							// write settings
 							if (this.devices.cameras[camMac]) {
