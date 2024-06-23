@@ -251,6 +251,9 @@
         "id": "cameras.id"
       },
       {
+        "id": "cameras.type"
+      },
+      {
         "id": "cameras.state"
       },
       {
@@ -284,6 +287,9 @@
         "id": "nvr.id"
       },
       {
+        "id": "nvr.type"
+      },
+      {
         "id": "nvr.hostShortname"
       },
       {
@@ -309,6 +315,9 @@
       },
       {
         "id": "nvr.systemInfo.memory"
+      },
+      {
+        "id": "nvr.systemInfo.storage.devices"
       },
       {
         "id": "users.id"
