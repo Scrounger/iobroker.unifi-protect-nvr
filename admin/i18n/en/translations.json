@@ -37,5 +37,6 @@
 	"warning": "warning",
 	"Choose which states should be excluded": "Choose which states should be excluded",
 	"Data": "Data",
-	"All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!"
+	"All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!",
+	"You like the adapter? Then support me.": "You like the adapter? Then support me."
 }

@@ -37,5 +37,6 @@
     "Choose which states should be excluded": "Виберіть, які штати слід виключити",
     "General": "Загальний",
     "Data": "Дані",
-    "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "Тут перераховані всі дані, які надає API. Ці дані містять конфіденційну інформацію і повинні бути видалені або зроблені нерозпізнаними перед публікацією !!!"
+    "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "Тут перераховані всі дані, які надає API. Ці дані містять конфіденційну інформацію і повинні бути видалені або зроблені нерозпізнаними перед публікацією !!!",
+    "You like the adapter? Then support me.": "Вам подобається адаптер? Тоді підтримай мене."
 }

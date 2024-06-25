@@ -37,5 +37,6 @@
     "Choose which states should be excluded": "Choisissez quels États doivent être exclus",
     "General": "Général",
     "Data": "Données",
-    "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "Toutes les données fournies par l'API sont répertoriées ici. Ces données contiennent des informations confidentielles et doivent être supprimées ou rendues méconnaissables avant publication !!!"
+    "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "Toutes les données fournies par l'API sont répertoriées ici. Ces données contiennent des informations confidentielles et doivent être supprimées ou rendues méconnaissables avant publication !!!",
+    "You like the adapter? Then support me.": "Vous aimez l'adaptateur ? Alors soutenez-moi."
 }

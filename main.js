@@ -50,7 +50,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			'deviceUnadopted',
 			'disconnect',
 			'nonScheduledRecording',
-			'cameraPowerCycling'
+			'cameraPowerCycling',
+			'factoryReset'
 		];
 
 		this.ufpLiveStream = {}
@@ -873,7 +874,7 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
-	/** Create camera states
+	/** Create user states
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectNvrUserConfigInterface} user
 	 */
 	async createUserStates(user) {
