@@ -54,7 +54,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			'factoryReset'
 		];
 
-		this.ufpLiveStream = {}
+		this.ufpLiveStream = {};
 
 		this.devices = {
 			nvr: {},
@@ -330,7 +330,7 @@ class UnifiProtectNvr extends utils.Adapter {
 	}
 
 	/** Establish Connection to NVR and starting the alive checker
-	 * @param {boolean} isAdapterStart 
+	 * @param {boolean} isAdapterStart
 	 */
 	async establishConnection(isAdapterStart = false) {
 		const logPrefix = '[establishConnection]:';
@@ -634,12 +634,12 @@ class UnifiProtectNvr extends utils.Adapter {
 
 	/** get thumb of motion event
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
-	 * @param {string} targetId 
-	 * @param {string} eventId 
-	 * @param {number} width 
-	 * @param {number} height 
-	 * @param {boolean} isHistorieEnabled 
-	 * @param {string | undefined} historyId 
+	 * @param {string} targetId
+	 * @param {string} eventId
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {boolean} isHistorieEnabled
+	 * @param {string | undefined} historyId
 	 */
 	async getEventThumb(cam, targetId, eventId, width, height, isHistorieEnabled = false, historyId = undefined) {
 		if (this.ufp && this.isConnected) {
@@ -679,13 +679,13 @@ class UnifiProtectNvr extends utils.Adapter {
 
 	/** get animated thumb of motion event
 	 * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectCameraConfigInterface} cam
-	 * @param {string} targetId 
-	 * @param {string} eventId 
-	 * @param {number} width 
-	 * @param {number} height 
-	 * @param {number} speedup 
-	 * @param {boolean} isHistorieEnabled 
-	 * @param {string | undefined} historyId 
+	 * @param {string} targetId
+	 * @param {string} eventId
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {number} speedup
+	 * @param {boolean} isHistorieEnabled
+	 * @param {string | undefined} historyId
 	 */
 	async getEventAnimatedThumb(cam, targetId, eventId, width, height, speedup, isHistorieEnabled = false, historyId = undefined) {
 		if (this.ufp && this.isConnected) {
