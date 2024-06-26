@@ -190,10 +190,11 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				if (state && !state.from.includes(this.namespace)) {
 					// The state was changed
-					if (id.includes('cameras')) {
+					if (id.includes(`${this.namespace}.cameras`)) {
 						const camMac = id.split('.')[3];
 
 						if (id.includes(myDeviceTypes.cameras.takeSnapshot.id)) {
+							// Camera's: takt a snapshot and store it
 							this.getSnapshot(this.devices.cameras[camMac], `cameras.${camMac}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
 
 							// } else if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id) || id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStop.id)) {
@@ -215,32 +216,42 @@ class UnifiProtectNvr extends utils.Adapter {
 							// 	}
 
 						} else {
-							// write settings
+							// Camera's: write values
 							if (this.devices.cameras[camMac]) {
 								const writeValFunction = myHelper.getObjectByString(`${id.split(`${camMac}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
 
-								let objWrite = null;
+								await this.onStateChangedUfp(this.devices.cameras[camMac], id, state,
+									myHelper.strToObj(id.split(`${camMac}.`).pop(), writeValFunction ? writeValFunction(state.val) : state.val));
 
-								if (writeValFunction) {
-									objWrite = myHelper.strToObj(id.split(`${camMac}.`).pop(), writeValFunction(state.val));
-								} else {
-									objWrite = myHelper.strToObj(id.split(`${camMac}.`).pop(), state.val);
-								}
-
-								const success = await this.onStateChangedUfp(camMac, id, state, objWrite);
-
-								if (!success && this.config.stateChangeRetryDelay > 0) {
-									const that = this;
-									setTimeout(async function () {
-										await that.onStateChangedUfp(camMac, id, state, objWrite, true);
-									}, this.config.stateChangeRetryDelay * 1000);
-								}
 							} else {
 								this.log.error(`${logPrefix} cam (mac: ${camMac}) not exists in devices list`);
 							}
 						}
+
+					} else if (id.includes(`${this.namespace}.nvr`)) {
+						// NVR: write values
+						if (this.devices.nvr) {
+							const writeValFunction = myHelper.getObjectByString(`${id.split(`nvr.`).pop()}.writeVal`, myDeviceTypes.nvr, '.');
+
+							await this.onStateChangedUfp(this.devices.nvr, id, state,
+								myHelper.strToObj(id.split(`nvr.`).pop(), writeValFunction ? writeValFunction(state.val) : state.val));
+						}
+
+					} else if (id.includes(`${this.namespace}.users`)) {
+						const userId = id.split('.')[3];
+
+						if (this.devices.users[userId]) {
+							// User's: write values
+							const writeValFunction = myHelper.getObjectByString(`${id.split(`${userId}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
+
+							await this.onStateChangedUfp(this.devices.users[userId], id, state,
+								myHelper.strToObj(id.split(`${userId}.`).pop(), writeValFunction ? writeValFunction(state.val) : state.val));
+						} else {
+							this.log.error(`${logPrefix} user (id: ${userId}) not exists in devices list`);
+						}
+
 					} else {
-						this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+						this.log.warn(`${logPrefix} not implemented: state ${id} changed: ${state.val} (ack = ${state.ack})!`);
 					}
 				} else {
 					// The state was deleted
@@ -255,23 +266,34 @@ class UnifiProtectNvr extends utils.Adapter {
 	}
 
 	/** Send state changed to nvr using ufp
-	 * @param {string} camMac
+	 * @param {object} device
 	 * @param {string} id
 	 * @param {ioBroker.State} state
 	 * @param {object} objWrite
 	 */
-	async onStateChangedUfp(camMac, id, state, objWrite, secondRun = false) {
+	async onStateChangedUfp(device, id, state, objWrite, secondRun = false) {
 		const logPrefix = '[onStateChangedUfp]:';
 		try {
 			if (this.ufp) {
-				const response = await this.ufp.updateDevice(this.devices.cameras[camMac], objWrite);
+				const response = await this.ufp.updateDevice(device, objWrite);
+
+				this.log.silly(`${logPrefix} response: ${JSON.stringify(response)}`);
+
 				if (response !== null) {
-					this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - state '.${id.split('.')?.slice(3)?.join('.')}' changed, objWrite: ${JSON.stringify(objWrite)}`);
-					this.log.info(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - state '.${id.split('.')?.slice(3)?.join('.')}' changed to '${state.val}'${secondRun ? ' (2nd try)' : ''}`);
+					this.log.debug(`${logPrefix} ${this.ufp.getDeviceName(device)} - state '.${id.split('.')?.slice(3)?.join('.')}' changed, objWrite: ${JSON.stringify(objWrite)}`);
+					this.log.info(`${logPrefix} ${this.ufp.getDeviceName(device)} - state '.${id.split('.')?.slice(3)?.join('.')}' changed to '${state.val}'${secondRun ? ' (2nd try)' : ''}`);
 
 					return true;
 				} else {
-					this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(this.devices.cameras[camMac])} - changing state${secondRun ? ' second time' : ''} '${id}' to '${state.val}' not successful!`);
+					this.log.warn(`${logPrefix} response: ${JSON.stringify(response)}`);
+					this.log.warn(`${logPrefix} ${this.ufp.getDeviceName(device)} - changing state${secondRun ? ' (2nd try)' : ''} '${id}' to '${state.val}' not successful!`);
+
+					if (!secondRun && this.config.stateChangeRetryDelay > 0) {
+						const that = this;
+						setTimeout(async function () {
+							await that.onStateChangedUfp(device, id, state, objWrite, true);
+						}, this.config.stateChangeRetryDelay * 1000);
+					}
 				}
 			}
 		} catch (error) {
