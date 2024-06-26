@@ -329,6 +329,9 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** Establish Connection to NVR and starting the alive checker
+	 * @param {boolean} isAdapterStart 
+	 */
 	async establishConnection(isAdapterStart = false) {
 		const logPrefix = '[establishConnection]:';
 
@@ -352,6 +355,9 @@ class UnifiProtectNvr extends utils.Adapter {
 		}
 	}
 
+	/** Login into NVR and load bootstrap data
+	 * @returns {Promise<boolean>} Connection status
+	 */
 	async login() {
 		const logPrefix = '[login]:';
 
