@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0-alpha.7",
+    "version": "1.0.0",
     "news": {
+      "1.0.0": {
+        "en": "bug fixes\ndependencies updated",
+        "de": "fehlerbehebungen\naktualisierte abhängigkeiten",
+        "ru": "исправления ошибок\nобновленная информация о зависимостях",
+        "pt": "correções de bugs\ndependências atualizadas",
+        "nl": "foutherstel\nafhankelijkheden bijgewerkt",
+        "fr": "corrections des bogues\ndépendances mises à jour",
+        "it": "correzioni di bug\ndipendenze aggiornate",
+        "es": "bug fixes\ndependencias actualizadas",
+        "pl": "poprawki błędów\nzaktualizowane zależności",
+        "uk": "виправлення помилок\nоновлені залежності",
+        "zh-cn": "错误修正\n更新依赖关系"
+      },
       "1.0.0-alpha.7": {
         "en": "work in progress",
         "de": "arbeit im laufenden",
@@ -80,19 +93,6 @@
         "pl": "poprawki błędów",
         "uk": "виправлення помилок",
         "zh-cn": "错误修正"
-      },
-      "1.0.0-alpha.1": {
-        "en": "testing fix",
-        "de": "prüfstand",
-        "ru": "исправление",
-        "pt": "correção de teste",
-        "nl": "testfix",
-        "fr": "d'essai",
-        "it": "correzione di test",
-        "es": "prueba",
-        "pl": "fix testowy",
-        "uk": "фіксатор тестування",
-        "zh-cn": "测试修正"
       }
     },
     "title": "Unifi Protect NVR",
