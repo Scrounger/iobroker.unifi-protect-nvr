@@ -51,7 +51,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			'disconnect',
 			'nonScheduledRecording',
 			'cameraPowerCycling',
-			'factoryReset'
+			'factoryReset',
+			'videoCodecChanged'
 		];
 
 		this.ufpLiveStream = {};
