@@ -38,5 +38,6 @@
     "General": "一般的",
     "Data": "数据",
     "All data supplied by the API is listed here. This data contains confidential information and should be removed or made unrecognizable before publication !!!": "此处列出了 API 提供的所有数据。该数据包含机密信息，应在发布前删除或使其无法识别！",
-    "You like the adapter? Then support me.": "你喜欢这个适配器吗？那就支持我吧。"
+    "You like the adapter? Then support me.": "你喜欢这个适配器吗？那就支持我吧。",
+    "Sensors": "传感器"
 }

@@ -60,7 +60,8 @@ class UnifiProtectNvr extends utils.Adapter {
 		this.devices = {
 			nvr: {},
 			cameras: {},
-			users: {}
+			users: {},
+			sensors: {}
 		};
 
 		this.devicesById = {};
@@ -467,6 +468,22 @@ class UnifiProtectNvr extends utils.Adapter {
 						}
 					}
 				}
+
+				// Add Sensors to List
+				if (this.ufp.bootstrap.sensors) {
+					if (this.config.sensorsEnabled) {
+						for (const sensor of this.ufp.bootstrap.sensors) {
+							this.log.info(`${logPrefix}: Discovered ${sensor.modelKey}: ${sensor.name}`);
+							this.devices.sensors[sensor.mac] = sensor;
+
+							if (isAdapterStart) {
+								await this.createSensorStates(sensor);
+							}
+						}
+						this.log.silly(`${logPrefix} devices.sensors: ${JSON.stringify(this.devices.sensors)}`);
+					}
+				}
+
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
@@ -512,6 +529,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				await this.updateStates(userId, 'users', this.devices.users[userId], myDeviceTypes.users, event.payload);
 
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
+			} else if (this.config.sensorsEnabled && event.header.modelKey === 'sensor') {
+				this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			} else {
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			}
@@ -946,6 +965,57 @@ class UnifiProtectNvr extends utils.Adapter {
 				}
 
 				await this.createGenericState(`users.${user.id}`, myDeviceTypes.users, user, 'users', user);
+			}
+		} catch (error) {
+			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
+		}
+	}
+
+
+	/** Create sensor states
+ * @param {import("unifi-protect", { with: { "resolution-mode": "import" } }).ProtectSensorConfigInterface} sensor
+ */
+	async createSensorStates(sensor) {
+		const logPrefix = '[createSensorStates]:';
+
+		try {
+			if (this.ufp) {
+				if (!await this.objectExists(`sensors`)) {
+					await this.extendObject(`sensors`, {
+						type: 'device',
+						common: {
+							name: 'Sensors\'s',
+							// icon: myDeviceImages.Cameras			//ToDo
+						}
+					});
+				}
+
+				const common = {
+					name: this.ufp.getDeviceName(sensor, sensor.name),
+					icon: myDeviceImages[sensor.type] ? myDeviceImages[sensor.type] : null
+				};
+
+				if (!await this.objectExists(`sensors.${sensor.mac}`)) {
+					// create sensor channel
+					this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(sensor)} - creating channel '${sensor.mac}' for sensor '${this.ufp.getDeviceName(sensor, sensor.name)}'`);
+
+					await this.setObjectAsync(`sensors.${sensor.mac}`, {
+						type: 'channel',
+						common: common,
+						native: {}
+					});
+				} else {
+					const obj = await this.getObjectAsync(`sensors.${sensor.mac}`);
+
+					if (obj && obj.common) {
+						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+							await this.extendObject(`sensors.${sensor.mac}`, { common: common });
+							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(sensor)} - channel updated '.${sensor.mac}'`);
+						}
+					}
+				}
+
+				await this.createGenericState(`sensors.${sensor.mac}`, myDeviceTypes.sensors, sensor, 'sensors', sensor);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);

@@ -178,6 +178,7 @@
     "camerasEnabled": true,
     "nvrEnabled": true,
     "usersEnabled": false,
+    "sensorsEnabled": false,
     "motionEventsEnabled": true,
     "motionEventsHistoryEnabled": false,
     "motionEventsHistoryRetention": 24,
