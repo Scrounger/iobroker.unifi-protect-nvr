@@ -29,6 +29,7 @@ The following devices have been successfully tested with the adapter.
 | G4 Instant        | Camera |    ✔    |
 | G5 Pro + Enhancer | Camera |    ✔    |
 | G5 Turret Ultra   | Camera |    ✔    |
+| UP Sense          | Sensor |    ✔    |
 
 ## Developer manual
 
@@ -139,6 +140,11 @@ For later updates, the above procedure is not necessary. Just do the following:
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (Scrounger) UP Sense integration
+
 ### 1.0.0 (2024-08-13)
 
 - (Scrounger) bug fixes

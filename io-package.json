@@ -331,6 +331,54 @@
       },
       {
         "id": "users.location.longitude"
+      },
+      {
+        "id": "sensors.alarmSettings"
+      },
+      {
+        "id": "sensors.humiditySettings"
+      },
+      {
+        "id": "sensors.ledSettings"
+      },
+      {
+        "id": "sensors.lightSettings"
+      },
+      {
+        "id": "sensors.temperatureSettings"
+      },
+      {
+        "id": "sensors.alarmTriggeredAt"
+      },
+      {
+        "id": "sensors.displayName"
+      },
+      {
+        "id": "sensors.marketName"
+      },
+      {
+        "id": "sensors.lastSeen"
+      },
+      {
+        "id": "sensors.firmwareVersion"
+      },
+      {
+        "id": "sensors.id"
+      },
+      {
+        "id": "sensors.mac"
+      },
+      {
+        "id": "sensors.type"
+      },
+      {
+        "id": "sensors.uptime"
+      },
+      {
+        "id": "sensors.upSince"
+      },
+      {
+        "id": "sensors.connectedSince"
       }
     ]
   },

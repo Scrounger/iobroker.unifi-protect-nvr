@@ -244,12 +244,26 @@ class UnifiProtectNvr extends utils.Adapter {
 
 						if (this.devices.users[userId]) {
 							// User's: write values
-							const writeValFunction = myHelper.getObjectByString(`${id.split(`${userId}.`).pop()}.writeVal`, myDeviceTypes.cameras, '.');
+							const writeValFunction = myHelper.getObjectByString(`${id.split(`${userId}.`).pop()}.writeVal`, myDeviceTypes.users, '.');
 
 							await this.onStateChangedUfp(this.devices.users[userId], id, state,
 								myHelper.strToObj(id.split(`${userId}.`).pop(), writeValFunction ? writeValFunction(state.val) : state.val));
 						} else {
 							this.log.error(`${logPrefix} user (id: ${userId}) not exists in devices list`);
+						}
+
+					} else if (id.includes(`${this.namespace}.sensors`)) {
+						const sensorMac = id.split('.')[3];
+
+						// Sensor's: write values
+						if (this.devices.sensors[sensorMac]) {
+							const writeValFunction = myHelper.getObjectByString(`${id.split(`${sensorMac}.`).pop()}.writeVal`, myDeviceTypes.sensors, '.');
+
+							await this.onStateChangedUfp(this.devices.sensors[sensorMac], id, state,
+								myHelper.strToObj(id.split(`${sensorMac}.`).pop(), writeValFunction ? writeValFunction(state.val) : state.val));
+
+						} else {
+							this.log.error(`${logPrefix} sensor (mac: ${sensorMac}) not exists in devices list`);
 						}
 
 					} else {
@@ -475,6 +489,7 @@ class UnifiProtectNvr extends utils.Adapter {
 						for (const sensor of this.ufp.bootstrap.sensors) {
 							this.log.info(`${logPrefix}: Discovered ${sensor.modelKey}: ${sensor.name}`);
 							this.devices.sensors[sensor.mac] = sensor;
+							this.devicesById[sensor.id] = this.devices.sensors[sensor.mac];
 
 							if (isAdapterStart) {
 								await this.createSensorStates(sensor);
@@ -530,9 +545,17 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			} else if (this.config.sensorsEnabled && event.header.modelKey === 'sensor') {
-				this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
-			} else {
+				const sensorId = event.header.id;
+				if (this.devicesById[sensorId]) {
+					await this.updateStates(this.devicesById[sensorId].mac, 'sensors', this.devicesById[sensorId], myDeviceTypes.sensors, event.payload);
+				} else {
+					if (event && event.payload && event.payload.type)
+						this.log.warn(`${logPrefix} unknown device (id: ${sensorId}, type: ${event.payload.type}). Please restart the adapter to detect new devices`);
+				}
+
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
+			} else {
+				this.log.silly(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
