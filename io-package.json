@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "news": {
+      "1.1.0": {
+        "en": "UP Sense integration",
+        "de": "R Sense Integration",
+        "ru": "UP Четкая интеграция",
+        "pt": "Levanta-te. Integração de sentido",
+        "nl": "Omhoog Gevoelige integratie",
+        "fr": "SUPER Intégration sensée",
+        "it": "Su. Integrazione del senso",
+        "es": "Arriba Integración sensorial",
+        "pl": "Początek rozdziału Integracja zmysłowa",
+        "uk": "Доля Партнерство",
+        "zh-cn": "上楼 理智融合"
+      },
       "1.0.0": {
         "en": "bug fixes\ndependencies updated",
         "de": "fehlerbehebungen\naktualisierte abhängigkeiten",
@@ -80,19 +93,6 @@
         "pl": "prace w toku",
         "uk": "робота в прогресі",
         "zh-cn": "进行中的工作"
-      },
-      "1.0.0-alpha.2": {
-        "en": "bug fixes",
-        "de": "fehlerbehebungen",
-        "ru": "исправления ошибок",
-        "pt": "correções de bugs",
-        "nl": "foutherstel",
-        "fr": "corrections des bogues",
-        "it": "correzioni di bug",
-        "es": "bug fixes",
-        "pl": "poprawki błędów",
-        "uk": "виправлення помилок",
-        "zh-cn": "错误修正"
       }
     },
     "title": "Unifi Protect NVR",
