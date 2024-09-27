@@ -13,7 +13,7 @@ const compat = new FlatCompat({
 });
 
 export default [{
-    ignores: ["**/.eslintrc.js", "admin/words.js"],
+    ignores: ["**/.eslintrc.js", "admin/words.js", "eslint.config.mjs"],
 }, ...compat.extends("eslint:recommended"), {
     plugins: {},
 
@@ -24,7 +24,7 @@ export default [{
         },
 
         ecmaVersion: "latest",
-        sourceType: "commonjs",
+        sourceType: "module",
     },
 
     rules: {

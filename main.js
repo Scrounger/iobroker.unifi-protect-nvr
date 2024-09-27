@@ -159,6 +159,8 @@ class UnifiProtectNvr extends utils.Adapter {
 			}
 
 			callback();
+
+			// eslint-disable-next-line no-unused-vars
 		} catch (e) {
 			callback();
 		}
@@ -1360,6 +1362,8 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				try {
 					dirList = await this.readDirAsync(this.namespace, this.storagePaths.snapshotCameras);
+
+					// eslint-disable-next-line no-unused-vars
 				} catch (ignore) {
 					// no dir's found -> ignore
 				}
@@ -1371,6 +1375,8 @@ class UnifiProtectNvr extends utils.Adapter {
 
 							try {
 								dirCams = await this.readDirAsync(this.namespace, `${this.storagePaths.snapshotCameras}${dir.file}/`);
+
+								// eslint-disable-next-line no-unused-vars
 							} catch (ignore) {
 								// no dir's found -> ignore
 							}
