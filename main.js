@@ -154,7 +154,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			// clearInterval(interval1);
 			if (this.ufp) {
 				this.ufp.reset();
-				this.setConnectionStatus(false);
+				this.setConnectionStatus(false, false);
 				this.log.info(`${logPrefix} Logged out successfully from the Unifi-Protect controller API. (host: ${this.config.host})`);
 			}
 
@@ -386,7 +386,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 					if (await this.ufp.getBootstrap()) {
 						this.log.debug(`${logPrefix} successfully received bootstrap`);
-						await this.setConnectionStatus(true);
+						await this.setConnectionStatus(true, this.ufp.isThrottled);
 
 						return true;
 					} else {
@@ -400,7 +400,7 @@ class UnifiProtectNvr extends utils.Adapter {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
 
-		await this.setConnectionStatus(false);
+		await this.setConnectionStatus(false, false);
 
 		return false;
 	}
@@ -825,7 +825,7 @@ class UnifiProtectNvr extends utils.Adapter {
 					this.log.warn(`${logPrefix} No connection to the Unifi-Protect controller -> restart connection (retries: ${this.connectionRetries})`);
 					this.ufp.reset();
 
-					await this.setConnectionStatus(false);
+					await this.setConnectionStatus(false, this.ufp.isThrottled);
 
 					if (this.connectionRetries < this.connectionMaxRetries) {
 						this.connectionRetries++;
@@ -838,7 +838,7 @@ class UnifiProtectNvr extends utils.Adapter {
 				} else {
 					this.log.silly(`${logPrefix} Connection to the Unifi-Protect controller is alive (last alive signal is ${diff}s old)`);
 
-					await this.setConnectionStatus(true);
+					await this.setConnectionStatus(true, this.ufp.isThrottled);
 					this.connectionRetries = 0;
 
 					if (this.aliveTimeout) {
@@ -1480,12 +1480,13 @@ class UnifiProtectNvr extends utils.Adapter {
 	/** Set adapter info.connection state and internal var
 	 * @param {boolean} isConnected
 	 */
-	async setConnectionStatus(isConnected) {
+	async setConnectionStatus(isConnected, isThrottled) {
 		const logPrefix = '[setConnectionStatus]:';
 
 		try {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
+			await this.setStateAsync('info.isThrottled', isThrottled, true);
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}

@@ -425,6 +425,20 @@
         "def": false
       },
       "native": {}
+    },
+    {
+      "_id": "info.isThrottled",
+      "type": "state",
+      "common": {
+        "role": "state",
+        "name": "connection is throttled",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false,
+        "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAcFJREFUSEt9VbmRwzAMXBThyNHNzdgFuRUnV8C5JBfi5LIbB47cBD0iCHBBglIgUXzwLBcLgT8CoPRfGq1X0u3g/dsYbeYC4BeC88LPH4ArgHtmthttI/vUr77egnJoY81mDv0fwHcyn6cCqVvbI0VQzGx2wPCjM352Aa850Eh3DFRDw/p2uB8iqNVrg0YIBTIwXlNdyh2kW3tmAaJmI4GgRmThriFKnPHmlwBHDTMhpk49AXwZBhNEdptOHLXkNBXgVgSnSFOn3QMFPxNNp1iYpgK7g5STdlFJAcpOlqFEDaLuYMIxreP8niZyR5oSvRjMpCRW2rG4Os9WgNK4uIywV350vOeTd5r9zVdioZpRzYKcmUXkQDVLcJ9kgXQplD5HLcC7CA6h7GaKqGZFLYpysFOgXtELWKyUtgRZ7JoDPcX1QWVXF1MHk+SoVHkdkKhSGeYESomwdMA2BhZpHvbOSezH6Z6CKBIda05FG07seoPjFwTHrUtVFuUC9yxVs7pUDBBl/cbnLhDcUHAasm/EkgdQXLO4Hyw7Iae/KqjQZHojqva9+yz6MKNPiOTYeCtvUAc6Ts4mDFiKWU/jPLeUDwEhySLjsQhlAAAAAElFTkSuQmCC"
+      },
+      "native": {}
     }
   ]
 }

@@ -144,6 +144,8 @@ For later updates, the above procedure is not necessary. Just do the following:
 ### **WORK IN PROGRESS**
 
 - (Scrounger) translation optimized
+- (Scrounger) unifi-protect library updated to v4.15.0
+- (Scrounger) info is isThrottled added
 
 ### 1.1.0 (2024-08-30)
 
