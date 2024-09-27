@@ -1487,6 +1487,10 @@ class UnifiProtectNvr extends utils.Adapter {
 			this.isConnected = isConnected;
 			await this.setStateAsync('info.connection', isConnected, true);
 			await this.setStateAsync('info.isThrottled', isThrottled, true);
+
+			if (isThrottled) {
+				this.log.warn(`${logPrefix} connection is throttled!`);
+			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);
 		}
