@@ -151,27 +151,7 @@
     "dataSource": "push",
     "messagebox": true,
     "adminUI": {
-      "config": "json",
-      "tab": "materialize"
-    },
-    "materializeTab": true,
-    "adminTab": {
-      "singleton": false,
-      "name": {
-        "en": "Unifi Protect NVR",
-        "de": "Unifi Protect NVR",
-        "ru": "Unifi Protect NVR",
-        "pt": "Unifi Proteger NVR",
-        "nl": "Unifi Protect NVR",
-        "fr": "Unifi Protéger NVR",
-        "it": "Unifi Proteggi NVR",
-        "es": "Unifi protege NVR",
-        "pl": "Unifi Protect NVR",
-        "uk": "Unifi Protect NVR",
-        "zh-cn": "Unifi 保护 NVR"
-      },
-      "link": "",
-      "fa-icon": "unifi-protect-nvr.svg"
+      "config": "json"
     },
     "dependencies": [
       {
