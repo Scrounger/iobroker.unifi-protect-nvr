@@ -201,23 +201,29 @@ class UnifiProtectNvr extends utils.Adapter {
 							// Camera's: takt a snapshot and store it
 							this.getSnapshot(this.devices.cameras[camMac], `cameras.${camMac}.${myDeviceTypes.cameras.takeSnapshotUrl.id}`, this.config.manualSnapshotWidth, this.config.manualSnapshotHeight);
 
-							// } else if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id) || id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStop.id)) {
-							// 	const camId = this.devices.cameras[camMac].id;
+						} else if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id) || id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStop.id)) {
+							const camId = this.devices.cameras[camMac].id;
 
-							// 	this.ufpLiveStream[camId] = this.ufp.createLivestream();
+							this.ufpLiveStream[camId] = this.ufp.createLivestream();
 
-							// 	if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id)) {
-							// 		let res = await this.ufpLiveStream[camId].start(camId, 0);
+							if (id.split('.').pop()?.includes(myDeviceTypes.cameras.channels.items.streamStart.id)) {
+								let res = await this.ufpLiveStream[camId].start(camId, 0);
 
-							// 		if (res) {
-							// 			this.log.warn(this.ufpLiveStream[camId].ws._url);
-							// 			this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStart.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), this.ufpLiveStream[camId].ws._url, true);
-							// 		}
-							// 	} else {
-							// 		this.log.warn('stop!');
-							// 		await this.ufpLiveStream[camId].stop();
-							// 		this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStop.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), null, true);
-							// 	}
+								if (res) {
+									this.log.warn(this.ufpLiveStream[camId].ws._url);
+									this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStart.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), this.ufpLiveStream[camId].ws._url, true);
+
+									this.ufpLiveStream[camId].on('message', (event) => {
+										this.log.warn(JSON.stringify(event));
+									});
+								}
+							} else {
+								this.log.warn('stop!');
+								await this.ufpLiveStream[camId].stop();
+
+
+								this.setStateExists(id.replace(`.${myDeviceTypes.cameras.channels.items.streamStop.id}`, `.${myDeviceTypes.cameras.channels.items.streamUrl.id}`), null, true);
+							}
 
 						} else {
 							// Camera's: write values
@@ -557,7 +563,7 @@ class UnifiProtectNvr extends utils.Adapter {
 
 				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			} else {
-				this.log.silly(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
+				// this.log.warn(`header: ${JSON.stringify(event.header)}, payload: ${JSON.stringify(event.payload)}`);
 			}
 		} catch (error) {
 			this.log.error(`${logPrefix} error: ${error}, stack: ${error.stack}`);

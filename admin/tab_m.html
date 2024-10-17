@@ -1,0 +1,92 @@
+<html>
+
+<head>
+    <!-- Load ioBroker scripts and styles-->
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+
+    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+
+    <script type="text/javascript" src="../../js/translate.js"></script>
+    <script type="text/javascript" src="../../lib/js/materialize.js"></script>
+
+    <script type="text/javascript" src="conn.js"></script>
+
+    <!-- <script type="text/javascript" src="../../js/adapter-settings.js"></script> -->
+
+    <!-- Load our own files -->
+    <!-- <link rel="stylesheet" type="text/css" href="style.css" /> -->
+    <script type="text/javascript" src="words.js"></script>
+
+    <script type="text/javascript" src="tab_m.js"></script>
+
+</head>
+
+<body>
+
+    <!-- this is where the React components are loaded into -->
+    <div class="m adapter-container" id="root"></div>
+
+    <!-- load compiled React scripts -->
+    <!-- <script type="text/javascript" src="build/tab.js"></script> -->
+    <div class="m adapter-container myTabContainer">
+        <div class="row">
+            <!-- Forms are the standard way to receive user inputted data.
+    			 Learn more http://materializecss.com/forms.html-->
+            <div class="row">
+                <div class="item">
+                    <video class="myWebRtcPlayer col s3"
+                        myUrl="https://user:TMdQhD2nBXillUIsT92M@10.0.5.11/webrtc.html?src=Eingang_00_High&media=video+audio"
+                        autoplay controls playsinline muted disablePictureInPicture></video>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s3">
+                    <video id="video" width="640" height="480" autoplay style="border: 1px solid black"></video>
+                    <br />
+                    <button id="play">Play</button>
+                    <button id="stop">Stop</button>
+                    <button id="download" onclick="download()">Download</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="myText" type="text">
+                    <label for="myText">Text</label>
+                    <span class="translate">Descriptions of the input field</span>
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input type="number" class="value" id="test2" />
+                    <label for="test2" class="translate">Number</label>
+                    <!-- Important: label must come directly after input. Label is important. -->
+                    <span class="translate">test2</span>
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input id="email" type="email" class="value validate">
+                    <label for="email" data-error="wrong" data-success="right">Email</label>
+                    <!--  You can add custom validation messages by adding either data-error or data-success attributes to your input field labels.-->
+                    <span class="translate">Verification input</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12 m4">
+                    <select class="value" id="mySelect">
+                        <option value="auto" class="translate">Auto</option>
+                        <option value="manual" class="translate">Manual</option>
+                    </select>
+                    <label for="mySelect" class="translate">My select</label>
+                    <!-- Important: label must come directly after select. Label is important. -->
+                </div>
+                <div class="input-field col s12 m8">
+                    <i class="material-icons prefix">mode_edit</i>
+                    <textarea id="Textarea" class="value materialize-textarea"></textarea>
+                    <label for="Textarea">Message</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
