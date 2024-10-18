@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "unifi-protect-nvr",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "news": {
+      "1.1.1": {
+        "en": "translation optimized\nunifi-protect library updated to v4.15.0\ninfo is isThrottled added\nbug fixes",
+        "de": "übersetzung optimiert\nunifi-protect-bibliothek aktualisiert auf v4.15.0\ninfo isThrottled hinzugefügt\nfehlerbehebungen",
+        "ru": "оптимизированный перевод\nunifi-защитная библиотека обновляется до v4.15.0\nинформация добавлена\nисправления ошибок",
+        "pt": "tradução otimizada\nbiblioteca unifi-protect atualizado para v4.15.0\ninfo is isThrottled adicionado\ncorreções de bugs",
+        "nl": "vertaling geoptimaliseerd\nunifi-protect bibliotheek bijgewerkt naar v4.15.0\ninfo is toegevoegd\nfoutherstel",
+        "fr": "traduction optimisée\nbibliothèque unifi-protect mise à jour en v4.15.0\ninfo est isThrottled ajouté\ncorrections des bogues",
+        "it": "traduzione ottimizzata\nlibreria unifi-protect aggiornata a v4.15.0\ninfo is isThrottled aggiunto\ncorrezioni di bug",
+        "es": "traducción optimizada\nbiblioteca de protección unificada actualizada a v4.15.0\ninfo is isThrottled added\nbug fixes",
+        "pl": "zoptymalizowane tłumaczenie\nunifi- protect library zaktualizowane do v4.15.0\ninfo jest dodawane\npoprawki błędów",
+        "uk": "оптимізація перекладу\nрусскийукраїнськабеларускаяoʻzbek tilienglish\nдодана інформація\nвиправлення помилок",
+        "zh-cn": "翻译优化\nunifi 保护库更新为 v4.1.5\n信息为 Throtted 添加\n错误修正"
+      },
       "1.1.0": {
         "en": "UP Sense integration",
         "de": "R Sense Integration",
@@ -69,19 +82,6 @@
         "zh-cn": "进行中的工作"
       },
       "1.0.0-alpha.4": {
-        "en": "work in progress",
-        "de": "arbeit im laufenden",
-        "ru": "работа",
-        "pt": "trabalho em andamento",
-        "nl": "lopende werkzaamheden",
-        "fr": "travaux en cours",
-        "it": "lavori in corso",
-        "es": "en curso",
-        "pl": "prace w toku",
-        "uk": "робота в прогресі",
-        "zh-cn": "进行中的工作"
-      },
-      "1.0.0-alpha.3": {
         "en": "work in progress",
         "de": "arbeit im laufenden",
         "ru": "работа",

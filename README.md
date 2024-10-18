@@ -140,8 +140,7 @@ For later updates, the above procedure is not necessary. Just do the following:
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.1.1 (2024-10-18)
 
 - (Scrounger) translation optimized
 - (Scrounger) unifi-protect library updated to v4.15.0
