@@ -883,7 +883,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`nvr`);
 
 					if (obj && obj.common) {
-						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+						//@ts-ignore
+						if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 							await this.extendObject(`nvr`, { common: common });
 							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(nvr)} - channel updated '.nvr'`);
 						}
@@ -933,7 +934,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`cameras.${cam.mac}`);
 
 					if (obj && obj.common) {
-						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+						//@ts-ignore
+						if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 							await this.extendObject(`cameras.${cam.mac}`, { common: common });
 							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(cam)} - channel updated '.${cam.mac}'`);
 						}
@@ -982,7 +984,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`users.${user.id}`);
 
 					if (obj && obj.common) {
-						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+						//@ts-ignore
+						if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 							await this.extendObject(`users.${user.id}`, { common: common });
 							this.log.debug(`${logPrefix} ${user.name} - channel updated '.${user.id}'`);
 						}
@@ -1033,7 +1036,8 @@ class UnifiProtectNvr extends utils.Adapter {
 					const obj = await this.getObjectAsync(`sensors.${sensor.mac}`);
 
 					if (obj && obj.common) {
-						if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+						//@ts-ignore
+						if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 							await this.extendObject(`sensors.${sensor.mac}`, { common: common });
 							this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(sensor)} - channel updated '.${sensor.mac}'`);
 						}
@@ -1079,7 +1083,8 @@ class UnifiProtectNvr extends utils.Adapter {
 				const obj = await this.getObjectAsync(`events.motion`);
 
 				if (obj && obj.common) {
-					if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+					//@ts-ignore
+					if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 						await this.extendObject(`events.motion`, { common: common });
 						this.log.debug(`${logPrefix} channel updated '.events.motion'`);
 					}
@@ -1143,7 +1148,8 @@ class UnifiProtectNvr extends utils.Adapter {
 								const commonUpdated = await this.getCommonGenericState(id, deviceTypes, objOrg, logMsgState);
 
 								if (obj && obj.common) {
-									if (JSON.stringify(obj.common) !== JSON.stringify(commonUpdated)) {
+									//@ts-ignore
+									if (!myHelper.isStateCommonEqual(obj.common, commonUpdated)) {
 										await this.extendObject(`${channel}.${stateId}`, { common: commonUpdated });
 										this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - updated common properties of state '${logMsgState}'`);
 									}
@@ -1204,7 +1210,8 @@ class UnifiProtectNvr extends utils.Adapter {
 									const obj = await this.getObjectAsync(`${channel}.${id}`);
 
 									if (obj && obj.common) {
-										if (JSON.stringify(obj.common) !== JSON.stringify(common)) {
+										//@ts-ignore
+										if (!myHelper.isChannelCommonEqual(obj.common, common)) {
 											await this.extendObject(`${channel}.${id}`, { common: common });
 											this.log.debug(`${logPrefix} ${this.ufp?.getDeviceName(objOrg)} - channel updated '${logMsgState}'`);
 										}
